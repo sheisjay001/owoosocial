@@ -57,6 +57,16 @@ try {
   }
 
   runCommand('npm install', clientDir);
+  
+  // List files in client directory for debugging
+  console.log('--- Listing Client Directory Before Build ---');
+  try {
+      const files = fs.readdirSync(clientDir);
+      console.log('Files in client:', files);
+  } catch (e) {
+      console.error('Error listing client files:', e);
+  }
+
   runCommand('npm run build', clientDir);
 
   // 2. Copy Client Build to Root
