@@ -1,0 +1,14 @@
+{
+  "name": "autopilot-social-ai",
+  "version": "1.0.0",
+  "scripts": {
+    "client-install": "cd client && npm install",
+    "server-install": "cd server && npm install",
+    "build-client": "cd client && npm run build",
+    "build": "node build-deploy.js",
+    "start": "node server/index.js"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
