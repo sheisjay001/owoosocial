@@ -12,15 +12,15 @@ node_modules/
 *.env.*
 
 # Build outputs
-dist/
-build/
-client/dist/
-public/
+/dist/
+/build/
+/client/dist/
+/public/
 
 # Client Build Artifacts (in Root)
-index.html
-assets/
-vite.svg
+/index.html
+/assets/
+/vite.svg
 
 # Logs
 npm-debug.log*
