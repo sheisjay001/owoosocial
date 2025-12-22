@@ -153,11 +153,20 @@ export default function Signup() {
              type="button"
              onClick={async () => {
                try {
-                  const res = await axios.post('/api/test-post');
-                  alert(`[${new Date().toLocaleTimeString()}] Test API Success: ` + JSON.stringify(res.data));
-                } catch (e) {
-                  alert(`[${new Date().toLocaleTimeString()}] Test API Failed: ` + (e.response ? JSON.stringify(e.response.data) : e.message));
-                }
+                 // Try GET first
+                 try {
+                     const resGet = await axios.get('/api/test-get');
+                     alert(`[${new Date().toLocaleTimeString()}] GET Success: ` + JSON.stringify(resGet.data));
+                 } catch (e) {
+                     alert(`[${new Date().toLocaleTimeString()}] GET Failed: ` + (e.response ? JSON.stringify(e.response.data) : e.message));
+                 }
+
+                 // Then Try POST
+                 const res = await axios.post('/api/test-post');
+                 alert(`[${new Date().toLocaleTimeString()}] POST Success: ` + JSON.stringify(res.data));
+               } catch (e) {
+                 alert(`[${new Date().toLocaleTimeString()}] POST Failed: ` + (e.response ? JSON.stringify(e.response.data) : e.message));
+               }
              }}
              className="text-xs text-gray-500 underline"
            >

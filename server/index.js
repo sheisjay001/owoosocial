@@ -41,10 +41,22 @@ app.use((req, res, next) => {
   next();
 });
 
+// DEBUG: Root handler for POST (in case URL is stripped)
+app.post('/', (req, res) => {
+    console.log('[Express] POST / hit (Root Path Mismatch?)');
+    res.status(200).json({ success: true, message: 'POST / works - Path was stripped!' });
+});
+
 // DEBUG: Explicit test route to verify POST works
 app.post('/api/test-post', (req, res) => {
   console.log('POST /api/test-post hit');
   res.status(200).json({ success: true, message: 'POST works!' });
+});
+
+// DEBUG: Test GET route
+app.get('/api/test-get', (req, res) => {
+    console.log('GET /api/test-get hit');
+    res.status(200).json({ success: true, message: 'GET works!' });
 });
 
 // DEBUG: Explicit registration route override (to test user suggestion)
