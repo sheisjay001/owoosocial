@@ -15,8 +15,8 @@ const connectDB = async () => {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 2000, // Fail after 2 seconds!
+      socketTimeoutMS: 5000,
     };
 
     const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ai-scheduler';
@@ -27,6 +27,7 @@ const connectDB = async () => {
       return mongoose;
     }).catch(err => {
         console.error('MongoDB Connection Error:', err.message);
+        // Important: Return null or throw to trigger fallback in auth controller
         throw err;
     });
   }
@@ -35,8 +36,7 @@ const connectDB = async () => {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    console.log('Continuing without database connection (Fallback Mode)...');
-    // We don't throw here to allow the app to start in fallback mode
+    console.log('Database connection failed, entering offline mode.');
   }
   
   return cached.conn;
