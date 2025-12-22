@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const emailService = require('../services/email.service');
@@ -31,6 +32,11 @@ exports.register = async (req, res) => {
 
     let user;
     try {
+      // Check if DB is connected
+      if (mongoose.connection.readyState !== 1) {
+        throw new Error('Database not connected');
+      }
+
       // Try DB first
       const userExists = await User.findOne({ email });
       if (userExists) {
@@ -83,6 +89,11 @@ exports.login = async (req, res) => {
     let isMatch = false;
 
     try {
+      // Check if DB is connected
+      if (mongoose.connection.readyState !== 1) {
+        throw new Error('Database not connected');
+      }
+
       // Try DB
       user = await User.findOne({ email }).select('+password');
       if (user) {
