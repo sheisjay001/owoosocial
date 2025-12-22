@@ -17,6 +17,7 @@ const communityRoutes = require('./routes/community.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const brandRoutes = require('./routes/brand.routes');
 const oauthRoutes = require('./routes/oauth.routes');
+const leadRoutes = require('./routes/lead.routes');
 // const initScheduler = require('./services/scheduler.service'); // Moved to conditional import
 const statusRoutes = require('./routes/status.routes');
 
@@ -82,6 +83,7 @@ const routes = [
   { path: '/community', route: communityRoutes },
   { path: '/brands', route: brandRoutes },
   { path: '/oauth', route: oauthRoutes },
+  { path: '/leads', route: leadRoutes },
   { path: '/status', route: statusRoutes },
 ];
 
