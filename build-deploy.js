@@ -71,30 +71,23 @@ try {
 
   runCommand('npm run build', clientDir);
 
-  // 2. Copy Client Build to Root - SKIPPED for Vercel Output Directory
-  /*
-  console.log('--- Copying Client Build to Root ---');
+  // 2. Copy Client Build to public/ (Clean Output Directory)
+  const publicDir = path.join(rootDir, 'public');
+  console.log('--- Copying Client Build to public/ ---');
+  
+  // Clean public dir to ensure no stale files
+  if (fs.existsSync(publicDir)) {
+    fs.rmSync(publicDir, { recursive: true, force: true });
+  }
+  fs.mkdirSync(publicDir);
+
   if (fs.existsSync(clientDistDir)) {
-    const distFiles = fs.readdirSync(clientDistDir);
-    for (const file of distFiles) {
-        const srcPath = path.join(clientDistDir, file);
-        const destPath = path.join(rootDir, file);
-        
-        // Only copy standard Vite build artifacts
-        if (file === 'index.html' || file === 'assets' || file === 'vite.svg' || file.endsWith('.js') || file.endsWith('.css')) {
-            console.log(`Copying ${file} to root...`);
-            if (fs.lstatSync(srcPath).isDirectory()) {
-                copyDir(srcPath, destPath);
-            } else {
-                fs.copyFileSync(srcPath, destPath);
-            }
-        }
-    }
-    console.log('Client build copied to root successfully.');
+    // Copy everything from dist to public
+    copyDir(clientDistDir, publicDir);
+    console.log('Client build copied to public/ successfully.');
   } else {
     throw new Error('Client dist directory not found! Build failed?');
   }
-  */
 
   // 3. Install Server Dependencies
   console.log('--- Installing Server Dependencies ---');
