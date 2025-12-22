@@ -15,8 +15,8 @@ const connectDB = async () => {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 2000, // Fail after 2 seconds!
-      socketTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000, // Increased to 10s for Vercel/Atlas latency
+      socketTimeoutMS: 45000, // Standard socket timeout
     };
 
     const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ai-scheduler';
