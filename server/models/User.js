@@ -32,6 +32,11 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  apiKeys: {
+    resend: { type: String, select: false },
+    sendgrid: { type: String, select: false },
+    openai: { type: String, select: false }
+  },
   connections: [
     {
       platform: String, // 'facebook', 'instagram', 'twitter', 'linkedin'

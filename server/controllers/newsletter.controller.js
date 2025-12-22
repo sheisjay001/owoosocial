@@ -86,7 +86,17 @@ exports.sendNewsletterNow = async (req, res) => {
         subscribers = mockSubscribers;
     }
 
-    await emailService.sendNewsletter(newsletter, subscribers);
+    // Get sender with API keys
+    let sender = {};
+    try {
+        if (req.user && req.user.id) {
+             sender = await User.findById(req.user.id).select('+apiKeys');
+        }
+    } catch (e) {
+        console.log('Error fetching sender:', e.message);
+    }
+
+    await emailService.sendNewsletter(newsletter, subscribers, sender);
     
     newsletter.status = 'sent';
     newsletter.sentAt = new Date();

@@ -26,10 +26,43 @@ export default function Settings() {
   const [showModal, setShowModal] = useState(false);
   const [modalPlatform, setModalPlatform] = useState('');
   const [formData, setFormData] = useState({ identifier: '', name: '', apiKey: '' });
+  const [apiKeys, setApiKeys] = useState({ resend: '', sendgrid: '', openai: '' });
+  const [savingKeys, setSavingKeys] = useState(false);
 
   useEffect(() => {
     fetchConnections();
+    fetchApiKeys();
   }, []);
+
+  const fetchApiKeys = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const { data } = await axios.get('/api/auth/api-keys', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setApiKeys(data.data);
+    } catch (error) {
+      console.error('Error fetching API keys:', error);
+    }
+  };
+
+  const handleSaveKeys = async (e) => {
+    e.preventDefault();
+    setSavingKeys(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.put('/api/auth/api-keys', apiKeys, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('API Keys updated successfully');
+      fetchApiKeys();
+    } catch (error) {
+      console.error('Error updating keys:', error);
+      alert('Failed to update API keys');
+    } finally {
+      setSavingKeys(false);
+    }
+  };
 
   const fetchConnections = async () => {
     try {
@@ -445,6 +478,62 @@ export default function Settings() {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+        <div className="p-6 border-b bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-900">API Configuration</h2>
+          <p className="text-sm text-gray-500">Configure your own API keys for services.</p>
+        </div>
+        <div className="p-6">
+          <form onSubmit={handleSaveKeys} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Resend API Key</label>
+              <input 
+                type="password"
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="re_..."
+                value={apiKeys.resend || ''}
+                onChange={e => setApiKeys({...apiKeys, resend: e.target.value})}
+              />
+              <p className="text-xs text-gray-500 mt-1">Required for Email Newsletters & Domains.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">SendGrid API Key</label>
+              <input 
+                type="password"
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="SG...."
+                value={apiKeys.sendgrid || ''}
+                onChange={e => setApiKeys({...apiKeys, sendgrid: e.target.value})}
+              />
+              <p className="text-xs text-gray-500 mt-1">Alternative email provider.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">OpenAI API Key</label>
+              <input 
+                type="password"
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="sk-..."
+                value={apiKeys.openai || ''}
+                onChange={e => setApiKeys({...apiKeys, openai: e.target.value})}
+              />
+              <p className="text-xs text-gray-500 mt-1">For AI content generation features.</p>
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <button
+                type="submit"
+                disabled={savingKeys}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {savingKeys ? 'Saving...' : 'Save API Keys'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 

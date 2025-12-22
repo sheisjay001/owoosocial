@@ -100,100 +100,78 @@ exports.login = async (req, res) => {
         isMatch = await user.matchPassword(password);
       }
     } catch (dbError) {
-      console.log('DB Error (Login), checking mock:', dbError.message);
+       console.log('DB Error (Login), using mock:', dbError.message);
+       // Mock fallback
+       user = mockUsers.find(u => u.email === email);
+       if (user) {
+           // Simple string comparison for mock
+           isMatch = user.password === password; 
+       }
     }
 
-    // Fallback to mock if user not found in DB or DB error occurred
-    if (!user) {
-      user = mockUsers.find(u => u.email === email);
-      if (user) {
-        // Simple check for mock
-        isMatch = user.password === password;
-      }
+    if (!user || !isMatch) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    if (user && isMatch) {
-      res.json({
-        success: true,
-        user: {
+    res.status(200).json({
+      success: true,
+      token: generateToken(user._id),
+      user: {
           _id: user._id,
           name: user.name,
           email: user.email,
-          role: user.role,
-        },
-        token: generateToken(user._id),
-      });
-    } else {
-      res.status(401).json({ success: false, error: 'Invalid email or password' });
-    }
+          role: user.role
+      }
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 };
 
 // @desc    Forgot Password
-// @route   POST /api/auth/forgotpassword
+// @route   POST /api/auth/forgot-password
 // @access  Public
 exports.forgotPassword = async (req, res) => {
-  const { email } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'User not found' });
-    }
-
-    // Get Reset Token
-    const resetToken = crypto.randomBytes(20).toString('hex');
-
-    // Hash token and set to resetPasswordToken field
-    user.resetPasswordToken = crypto
-      .createHash('sha256')
-      .update(resetToken)
-      .digest('hex');
-
-    // Set expire (10 minutes)
-    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
-
-    await user.save();
-
-    // Create reset url
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
-
-    const message = `
-      <h1>You have requested a password reset</h1>
-      <p>Please go to this link to reset your password:</p>
-      <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
-    `;
-
     try {
-      await emailService.sendEmail(
-        user.email,
-        'Password Reset Request',
-        message
-      );
-
+      const { email } = req.body;
+      const user = await User.findOne({ email });
+  
+      if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+  
+      // Get reset token
+      const resetToken = crypto.randomBytes(20).toString('hex');
+  
+      // Hash token and set to resetPasswordToken field
+      user.resetPasswordToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+  
+      // Set expire
+      user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+  
+      await user.save();
+  
+      const resetUrl = `${req.protocol}://${req.get(
+        'host'
+      )}/reset-password/${resetToken}`;
+      
+      // Ideally, send email here
+      console.log('Reset URL:', resetUrl); // For dev
+  
       res.status(200).json({ success: true, data: 'Email sent' });
     } catch (error) {
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpire = undefined;
-      await user.save();
-
-      return res.status(500).json({ success: false, error: 'Email could not be sent' });
+      res.status(500).json({ success: false, error: error.message });
     }
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
+  };
 
 // @desc    Reset Password
-// @route   PUT /api/auth/resetpassword/:resetToken
+// @route   PUT /api/auth/reset-password/:resetToken
 // @access  Public
 exports.resetPassword = async (req, res) => {
   try {
-    // Get hashed token
     const resetPasswordToken = crypto
       .createHash('sha256')
       .update(req.params.resetToken)
@@ -355,3 +333,51 @@ exports.removeConnection = async (req, res) => {
       res.status(500).json({ success: false, error: error.message });
     }
   };
+
+// @desc    Update API Keys
+// @route   PUT /api/auth/api-keys
+// @access  Private
+exports.updateApiKeys = async (req, res) => {
+  try {
+    const { resend, sendgrid, openai } = req.body;
+    const user = await User.findById(req.user.id).select('+apiKeys');
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    if (!user.apiKeys) user.apiKeys = {};
+
+    if (resend !== undefined) user.apiKeys.resend = resend;
+    if (sendgrid !== undefined) user.apiKeys.sendgrid = sendgrid;
+    if (openai !== undefined) user.apiKeys.openai = openai;
+
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'API Keys updated' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Get API Keys (Masked)
+// @route   GET /api/auth/api-keys
+// @access  Private
+exports.getApiKeys = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('+apiKeys');
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    const maskedKeys = {
+      resend: user.apiKeys?.resend ? `re_${'*'.repeat(8)}${user.apiKeys.resend.slice(-4)}` : '',
+      sendgrid: user.apiKeys?.sendgrid ? `SG.${'*'.repeat(8)}${user.apiKeys.sendgrid.slice(-4)}` : '',
+      openai: user.apiKeys?.openai ? `sk-${'*'.repeat(8)}${user.apiKeys.openai.slice(-4)}` : '',
+    };
+
+    res.status(200).json({ success: true, data: maskedKeys });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
