@@ -121,23 +121,44 @@ const initScheduler = () => {
       const dueNewsletters = await Newsletter.find({
         status: 'scheduled',
         scheduledTime: { $lte: now }
-      });
+      }).populate('user'); // Populate user to get sender info
 
       if (dueNewsletters.length > 0) {
         console.log(`Found ${dueNewsletters.length} newsletters to send.`);
         
-        // Mock subscribers for now
-        const mockSubscribers = ['subscriber1@example.com', 'subscriber2@example.com'];
+        const Subscriber = require('../models/Subscriber');
 
         for (const newsletter of dueNewsletters) {
           try {
-            await emailService.sendNewsletter(newsletter, mockSubscribers);
+            // Fetch real subscribers for this newsletter's owner
+            let subscribers = [];
+            
+            if (newsletter.user) {
+                const subDocs = await Subscriber.find({ 
+                    user: newsletter.user._id, 
+                    status: 'subscribed' 
+                }).select('email');
+                subscribers = subDocs.map(s => s.email);
+            }
+
+            if (subscribers.length === 0) {
+                console.log(`[Scheduler] No subscribers found for Newsletter ${newsletter._id} (User: ${newsletter.user?._id})`);
+                // Fallback to mock only if explicitly desired, otherwise skip
+                // subscribers = ['mock@example.com']; 
+                newsletter.status = 'failed';
+                newsletter.analytics = { ...newsletter.analytics, failureReason: 'No subscribers' };
+                await newsletter.save();
+                continue;
+            }
+
+            // Send using email service (passing user as sender)
+            await emailService.sendNewsletter(newsletter, subscribers, newsletter.user);
             
             newsletter.status = 'sent';
             newsletter.sentAt = new Date();
-            newsletter.recipientCount = mockSubscribers.length;
+            newsletter.recipientCount = subscribers.length;
             await newsletter.save();
-            console.log(`[Scheduler] Successfully sent newsletter ${newsletter._id}`);
+            console.log(`[Scheduler] Successfully sent newsletter ${newsletter._id} to ${subscribers.length} recipients.`);
           } catch (err) {
             console.error(`[Scheduler] Failed to send newsletter ${newsletter._id}:`, err);
             newsletter.status = 'failed';

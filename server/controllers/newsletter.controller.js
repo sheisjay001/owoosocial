@@ -20,6 +20,7 @@ exports.createNewsletter = async (req, res) => {
         content,
         scheduledTime,
         status: status || 'draft',
+        user: req.user.id // Link to creator
       });
     } catch (dbError) {
       console.log('DB Error, using in-memory store:', dbError.message);
@@ -29,6 +30,7 @@ exports.createNewsletter = async (req, res) => {
         content,
         scheduledTime,
         status: status || 'draft',
+        user: req.user.id,
         createdAt: new Date()
       };
       mockNewsletters.push(newsletter);
@@ -74,6 +76,7 @@ exports.sendNewsletterNow = async (req, res) => {
     // Fetch real subscribers (Subscribers owned by user)
     let subscribers = [];
     try {
+        const Subscriber = require('../models/Subscriber');
         const subList = await Subscriber.find({ 
             user: req.user.id, 
             status: 'subscribed' 
