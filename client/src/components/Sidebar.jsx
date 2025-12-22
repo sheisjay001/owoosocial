@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, Layers, BarChart, Settings, PlusCircle, PenTool, Mail, Mic, FileText, CreditCard, LogOut, MessageSquare, X } from 'lucide-react';
+import { LayoutDashboard, Calendar, Layers, BarChart, Settings, PlusCircle, PenTool, Mail, Mic, FileText, CreditCard, LogOut, MessageSquare, X, Sparkles } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
 

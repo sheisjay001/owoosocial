@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './layouts/Layout';
 import Dashboard from './pages/Dashboard';
 import CreatePost from './pages/CreatePost';
+import AITools from './pages/AITools';
 import Inbox from './pages/Inbox';
 import BrandSetup from './pages/BrandSetup';
 import Brands from './pages/Brands';
