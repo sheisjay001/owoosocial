@@ -18,12 +18,6 @@ const analyticsRoutes = require('./routes/analytics.routes');
 const initScheduler = require('./services/scheduler.service');
 const statusRoutes = require('./routes/status.routes');
 
-// Connect to Database
-connectDB();
-
-// Initialize Scheduler
-initScheduler();
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -55,7 +49,10 @@ app.get('/', (req, res) => {
   res.send('OWOO Social AI Server is running');
 });
 
-if (process.env.NODE_ENV !== 'production') {
+// Only connect if running directly (not imported)
+if (require.main === module) {
+  connectDB();
+  initScheduler();
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
