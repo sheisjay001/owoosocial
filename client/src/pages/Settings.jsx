@@ -516,15 +516,29 @@ export default function Settings() {
                     <ol className="list-decimal pl-4 space-y-1">
                         <li>Create a WhatsApp Group.</li>
                         <li>Add our verified business number to the group.</li>
-                        <li>Use a tool or bot command to find the unique <strong>Group ID</strong> (ending in @g.us).</li>
+                        <li>Find the unique <strong>Group ID</strong> (ending in @g.us).</li>
                         <li>Paste the Group ID below.</li>
+                    </ol>
+                ) : (modalPlatform === 'Facebook' || modalPlatform === 'Instagram') ? (
+                    <ol className="list-decimal pl-4 space-y-1">
+                        <li>Go to <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="underline font-medium">Meta Developers</a>.</li>
+                        <li>Create a Business App and add <strong>{modalPlatform} Graph API</strong>.</li>
+                        <li>Generate a <strong>Page Access Token</strong> via Graph Explorer.</li>
+                        <li>Paste the Token below.</li>
+                    </ol>
+                ) : modalPlatform === 'Twitter' ? (
+                    <ol className="list-decimal pl-4 space-y-1">
+                        <li>Go to <a href="https://developer.twitter.com/en/portal/dashboard" target="_blank" rel="noopener noreferrer" className="underline font-medium">X Developer Portal</a>.</li>
+                        <li>Create a Project & App with <strong>Read & Write</strong> permissions.</li>
+                        <li>Generate <strong>Access Token & Secret</strong>.</li>
+                        <li>Paste the Access Token below.</li>
                     </ol>
                 ) : (
                     <ol className="list-decimal pl-4 space-y-1">
-                        <li>Log in to your {modalPlatform} Developer/Creator Portal.</li>
-                        <li>Generate a new <strong>API Key</strong> or <strong>Client Secret</strong>.</li>
+                        <li>Log in to your {modalPlatform} Developer Portal.</li>
+                        <li>Generate a new <strong>API Key</strong> or <strong>Access Token</strong>.</li>
                         <li>Ensure the key has 'Write' permissions.</li>
-                        <li>Paste the API Key below.</li>
+                        <li>Paste the Key below.</li>
                     </ol>
                 )}
             </div>
