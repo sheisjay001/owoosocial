@@ -55,7 +55,9 @@ export default function CreatePost() {
     setResult(null);
 
     try {
-      const response = await axios.post('/api/ai/generate', formData);
+      const token = localStorage.getItem('authToken');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await axios.post('/api/ai/generate', formData, config);
       setResult(response.data.data);
     } catch (error) {
       console.error('Error generating content:', error);

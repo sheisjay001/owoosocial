@@ -490,10 +490,12 @@ export default function Settings() {
                     </ol>
                 ) : modalPlatform === 'WhatsApp' ? (
                     <ol className="list-decimal pl-4 space-y-1">
-                        <li>Create a WhatsApp Group.</li>
-                        <li>Add our verified business number to the group.</li>
-                        <li>Find the unique <strong>Group ID</strong> (ending in @g.us).</li>
-                        <li>Paste the Group ID below.</li>
+                        <li>Create a WhatsApp Group and add our bot/number.</li>
+                        <li>Open <strong>WhatsApp Web</strong> and click into the group.</li>
+                        <li>Right-click the <strong>Group Name/Title</strong> at the very top of the chat.</li>
+                        <li>Select <strong>Inspect</strong> from the menu that appears.</li>
+                        <li>Press <strong>Ctrl+F</strong> and search for <code>@g.us</code>.</li>
+                        <li>Copy the ID (e.g. <code>123...@g.us</code>) and paste below.</li>
                     </ol>
                 ) : (modalPlatform === 'Facebook' || modalPlatform === 'Instagram') ? (
                     <ol className="list-decimal pl-4 space-y-1">
