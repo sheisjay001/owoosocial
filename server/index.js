@@ -14,6 +14,7 @@ const domainRoutes = require('./routes/domain.routes');
 const authRoutes = require('./routes/auth.routes');
 const communityRoutes = require('./routes/community.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
+const statusRoutes = require('./routes/status.routes');
 const connectDB = require('./config/db');
 const initScheduler = require('./services/scheduler.service');
 
@@ -38,6 +39,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/domains', domainRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/status', statusRoutes);
 
 app.get('/', (req, res) => {
   res.send('OWOO Social AI Server is running');
