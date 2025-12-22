@@ -202,77 +202,15 @@ export default function Settings() {
         </div>
         
         <div className="divide-y">
-          {/* Instagram */}
+          {/* X */}
           <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-pink-50 rounded-lg text-pink-600">
-                <Instagram className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-900">Instagram</h3>
-                <p className="text-sm text-gray-500">Post photos, reels, and stories.</p>
-              </div>
-            </div>
-            {isConnected('Instagram') ? (
-                <div className="flex items-center gap-3">
-                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
-                    <button 
-                        onClick={() => handleDelete('Instagram', isConnected('Instagram').identifier)}
-                        className="text-gray-400 hover:text-red-600"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
-                </div>
-            ) : (
-                <button
-                    onClick={() => handleConnect('Instagram')}
-                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
-                >
-                    Connect
-                </button>
-            )}
-          </div>
-
-          {/* Facebook */}
-          <div className="p-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
-                <Facebook className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-900">Facebook</h3>
-                <p className="text-sm text-gray-500">Share posts to Pages and Groups.</p>
-              </div>
-            </div>
-            {isConnected('Facebook') ? (
-                <div className="flex items-center gap-3">
-                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
-                    <button 
-                        onClick={() => handleDelete('Facebook', isConnected('Facebook').identifier)}
-                        className="text-gray-400 hover:text-red-600"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
-                </div>
-            ) : (
-                <button
-                    onClick={() => handleConnect('Facebook')}
-                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
-                >
-                    Connect
-                </button>
-            )}
-          </div>
-
-          {/* Twitter / X */}
-          <div className="p-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gray-50 rounded-lg text-gray-900">
+              <div className="p-3 bg-black rounded-lg text-white">
                 <X className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900">X (Twitter)</h3>
-                <p className="text-sm text-gray-500">Post tweets and threads.</p>
+                <h3 className="font-medium text-gray-900">X</h3>
+                <p className="text-sm text-gray-500">Connect your X account.</p>
               </div>
             </div>
             {isConnected('Twitter') ? (
@@ -287,7 +225,78 @@ export default function Settings() {
                 </div>
             ) : (
                 <button
-                    onClick={() => handleConnect('Twitter')}
+                    onClick={() => {
+                        const token = localStorage.getItem('authToken');
+                        window.location.href = `/api/oauth/twitter/login?token=${token}`;
+                    }}
+                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
+                >
+                    Connect
+                </button>
+            )}
+          </div>
+
+          {/* Facebook Pages */}
+          <div className="p-6 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
+                <Facebook className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900">Facebook Pages</h3>
+                <p className="text-sm text-gray-500">Connect your Facebook Pages.</p>
+              </div>
+            </div>
+            {isConnected('Facebook') ? (
+                <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
+                    <button 
+                        onClick={() => handleDelete('Facebook', isConnected('Facebook').identifier)}
+                        className="text-gray-400 hover:text-red-600"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={() => {
+                        const token = localStorage.getItem('authToken');
+                        window.location.href = `/api/oauth/facebook/login?token=${token}`;
+                    }}
+                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
+                >
+                    Connect
+                </button>
+            )}
+          </div>
+
+          {/* Instagram Business */}
+          <div className="p-6 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-pink-50 rounded-lg text-pink-600">
+                <Instagram className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900">Instagram Business</h3>
+                <p className="text-sm text-gray-500">Connect your Instagram Business account.</p>
+              </div>
+            </div>
+            {isConnected('Instagram') ? (
+                <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
+                    <button 
+                        onClick={() => handleDelete('Instagram', isConnected('Instagram').identifier)}
+                        className="text-gray-400 hover:text-red-600"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={() => {
+                        const token = localStorage.getItem('authToken');
+                        window.location.href = `/api/oauth/instagram/login?token=${token}`;
+                    }}
                     className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
                 >
                     Connect
@@ -303,7 +312,7 @@ export default function Settings() {
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">LinkedIn</h3>
-                <p className="text-sm text-gray-500">Share professional updates and articles.</p>
+                <p className="text-sm text-gray-500">Connect your LinkedIn profile or page.</p>
               </div>
             </div>
             {isConnected('LinkedIn') ? (
@@ -318,69 +327,10 @@ export default function Settings() {
                 </div>
             ) : (
                 <button
-                    onClick={() => handleConnect('LinkedIn')}
-                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
-                >
-                    Connect
-                </button>
-            )}
-          </div>
-
-          {/* TikTok */}
-          <div className="p-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gray-50 rounded-lg text-black">
-                <Music className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-900">TikTok</h3>
-                <p className="text-sm text-gray-500">Upload short-form videos.</p>
-              </div>
-            </div>
-            {isConnected('TikTok') ? (
-                <div className="flex items-center gap-3">
-                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
-                    <button 
-                        onClick={() => handleDelete('TikTok', isConnected('TikTok').identifier)}
-                        className="text-gray-400 hover:text-red-600"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
-                </div>
-            ) : (
-                <button
-                    onClick={() => handleConnect('TikTok')}
-                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
-                >
-                    Connect
-                </button>
-            )}
-          </div>
-
-          {/* Snapchat */}
-          <div className="p-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-50 rounded-lg text-yellow-500">
-                <Ghost className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-900">Snapchat</h3>
-                <p className="text-sm text-gray-500">Share stories and snaps.</p>
-              </div>
-            </div>
-            {isConnected('Snapchat') ? (
-                <div className="flex items-center gap-3">
-                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
-                    <button 
-                        onClick={() => handleDelete('Snapchat', isConnected('Snapchat').identifier)}
-                        className="text-gray-400 hover:text-red-600"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
-                </div>
-            ) : (
-                <button
-                    onClick={() => handleConnect('Snapchat')}
+                    onClick={() => {
+                        const token = localStorage.getItem('authToken');
+                        window.location.href = `/api/oauth/linkedin/login?token=${token}`;
+                    }}
                     className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
                 >
                     Connect

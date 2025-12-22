@@ -14,6 +14,22 @@ const getProviderConfig = (platform) => {
         clientSecret: process.env.FACEBOOK_APP_SECRET,
         redirectUri
       };
+    case 'instagram':
+        return {
+            authUrl: `https://www.facebook.com/v19.0/dialog/oauth?client_id=${process.env.FACEBOOK_APP_ID}&redirect_uri=${redirectUri}&scope=instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement`,
+            tokenUrl: 'https://graph.facebook.com/v19.0/oauth/access_token',
+            clientId: process.env.FACEBOOK_APP_ID,
+            clientSecret: process.env.FACEBOOK_APP_SECRET,
+            redirectUri
+        };
+    case 'linkedin':
+        return {
+            authUrl: `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${process.env.LINKEDIN_CLIENT_ID}&redirect_uri=${redirectUri}&scope=r_liteprofile%20w_member_social`,
+            tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
+            clientId: process.env.LINKEDIN_CLIENT_ID,
+            clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+            redirectUri
+        };
     case 'twitter':
       // Basic structure for Twitter OAuth 2.0
       return {
@@ -64,7 +80,7 @@ exports.handleCallback = async (req, res) => {
 
     // 1. Exchange Code for Access Token
     let tokenResponse;
-    if (platform === 'facebook') {
+    if (platform === 'facebook' || platform === 'instagram') {
         tokenResponse = await axios.get(config.tokenUrl, {
             params: {
                 client_id: config.clientId,
@@ -72,6 +88,17 @@ exports.handleCallback = async (req, res) => {
                 redirect_uri: config.redirectUri,
                 code
             }
+        });
+    } else if (platform === 'linkedin') {
+        const params = new URLSearchParams();
+        params.append('grant_type', 'authorization_code');
+        params.append('code', code);
+        params.append('redirect_uri', config.redirectUri);
+        params.append('client_id', config.clientId);
+        params.append('client_secret', config.clientSecret);
+        
+        tokenResponse = await axios.post(config.tokenUrl, params, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
     } else if (platform === 'twitter') {
         // Twitter requires POST with Basic Auth header usually or body
@@ -126,9 +153,33 @@ exports.handleCallback = async (req, res) => {
             connectionData.platformId = page.id;
             connectionData.name = page.name;
             connectionData.accessToken = page.access_token; // Use Page Access Token, not User Token
-            connectionData.identifier = page.id; // For backward compat
-            connectionData.apiKey = page.access_token; // For backward compat
+            connectionData.identifier = page.id; 
+            connectionData.apiKey = page.access_token; 
         }
+    } else if (platform === 'instagram') {
+        // Fetch Pages -> Then Instagram Business Account
+        const pagesRes = await axios.get(`https://graph.facebook.com/v19.0/me/accounts?fields=instagram_business_account,name,access_token&access_token=${access_token}`);
+        // Find a page with an instagram_business_account
+        const pageWithInsta = pagesRes.data.data.find(p => p.instagram_business_account);
+        
+        if (pageWithInsta) {
+            connectionData.platformId = pageWithInsta.instagram_business_account.id;
+            connectionData.name = `${pageWithInsta.name} (IG)`;
+            connectionData.identifier = pageWithInsta.instagram_business_account.id;
+            // Use Page Access Token for IG posting
+            connectionData.accessToken = pageWithInsta.access_token; 
+            connectionData.apiKey = pageWithInsta.access_token;
+        } else {
+             throw new Error('No Instagram Business Account connected to your Facebook Pages.');
+        }
+    } else if (platform === 'linkedin') {
+        // Fetch Profile
+        const profileRes = await axios.get('https://api.linkedin.com/v2/me', {
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+        connectionData.platformId = profileRes.data.id;
+        connectionData.name = `${profileRes.data.localizedFirstName} ${profileRes.data.localizedLastName}`;
+        connectionData.identifier = profileRes.data.id;
     } else if (platform === 'twitter') {
          const userRes = await axios.get('https://api.twitter.com/2/users/me', {
              headers: { Authorization: `Bearer ${access_token}` }
