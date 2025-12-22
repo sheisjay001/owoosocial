@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Loader2 } from 'lucide-react';
 
 export default function BrandSetup() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -15,12 +18,25 @@ export default function BrandSetup() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Connect to backend
-    console.log('Brand Data:', formData);
-    alert('Brand created successfully! (Mock)');
-    navigate('/brands');
+    setLoading(true);
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const config = {
+            headers: { Authorization: `Bearer ${token}` }
+        };
+        
+        await axios.post('/api/brands', formData, config);
+        // alert('Brand created successfully!');
+        navigate('/brands');
+    } catch (error) {
+        console.error('Error creating brand:', error);
+        alert(error.response?.data?.error || 'Failed to create brand');
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (
@@ -108,9 +124,11 @@ export default function BrandSetup() {
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700"
+            disabled={loading}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            Create Brand
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            {loading ? 'Creating...' : 'Create Brand'}
           </button>
         </div>
       </form>

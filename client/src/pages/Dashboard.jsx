@@ -1,6 +1,9 @@
 import { BarChart, Users, Calendar, ArrowUpRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -12,7 +15,7 @@ export default function Dashboard() {
           <button className="px-4 py-2 bg-white border rounded-md text-sm font-medium hover:bg-gray-50">
             Export Report
           </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+          <button onClick={() => navigate('/create')} className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
             Create Post
           </button>
         </div>
