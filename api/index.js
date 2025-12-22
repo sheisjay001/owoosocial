@@ -1,4 +1,20 @@
-const app = require('../server/index');
+let app;
+try {
+  app = require('../server/index');
+} catch (err) {
+  console.error('CRITICAL: Failed to load server/index.js', err);
+  const express = require('express');
+  app = express();
+  app.all('*', (req, res) => {
+    res.status(500).json({
+      success: false,
+      message: 'Critical Server Initialization Error',
+      error: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  });
+}
+
 const connectDB = require('../server/config/db');
 
 // Vercel serverless function handler - using Explicit Rewrites to api/index.js

@@ -15,7 +15,7 @@ const domainRoutes = require('./routes/domain.routes');
 const authRoutes = require('./routes/auth.routes');
 const communityRoutes = require('./routes/community.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
-const initScheduler = require('./services/scheduler.service');
+// const initScheduler = require('./services/scheduler.service'); // Moved to conditional import
 const statusRoutes = require('./routes/status.routes');
 
 const app = express();
@@ -121,6 +121,7 @@ app.get('/', (req, res) => {
 // Only connect if running directly (not imported)
 if (require.main === module) {
   connectDB();
+  const initScheduler = require('./services/scheduler.service');
   initScheduler();
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
