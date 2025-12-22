@@ -13,6 +13,8 @@ module.exports = async (req, res) => {
     }
 
     // Handle OPTIONS request (CORS Preflight) directly
+    // COMMENTED OUT: Handled by vercel.json headers now to avoid duplicates
+    /*
     if (req.method === 'OPTIONS') {
       console.log('[Vercel] Handling OPTIONS request');
       res.setHeader('Access-Control-Allow-Credentials', true);
@@ -25,6 +27,7 @@ module.exports = async (req, res) => {
       res.status(200).end();
       return;
     }
+    */
 
     // Ensure database is connected before handling the request
     await connectDB();
