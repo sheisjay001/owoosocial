@@ -15,9 +15,10 @@ export default function Analytics() {
     try {
       const token = localStorage.getItem('authToken');
       const response = await axios.get('/api/analytics', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        params: { period }
       });
-      setAnalytics(response.data.data);
+      setData(response.data.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {
@@ -30,6 +31,8 @@ export default function Analytics() {
   }
 
   const { overview, charts, platformBreakdown } = data || {};
+  
+  const maxReach = charts?.reach?.length ? Math.max(...charts.reach) : 0;
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -61,28 +64,28 @@ export default function Analytics() {
         <KPICard 
           title="Total Reach" 
           value={overview?.totalReach.toLocaleString()} 
-          change="+12.5%" 
+          change={null} 
           icon={Eye} 
           trend="up" 
         />
         <KPICard 
           title="Engagement" 
           value={overview?.totalEngagement.toLocaleString()} 
-          change="+5.2%" 
+          change={null} 
           icon={MousePointer} 
           trend="up" 
         />
         <KPICard 
           title="New Followers" 
           value={overview?.newFollowers.toLocaleString()} 
-          change="-2.1%" 
+          change={null} 
           icon={Users} 
           trend="down" 
         />
         <KPICard 
           title="Impressions" 
           value={overview?.impressions.toLocaleString()} 
-          change="+8.4%" 
+          change={null} 
           icon={Activity} 
           trend="up" 
         />
@@ -92,8 +95,8 @@ export default function Analytics() {
       <div className="bg-white p-6 rounded-xl border shadow-sm">
         <h3 className="text-lg font-semibold mb-6">Engagement Trends</h3>
         <div className="h-64 flex items-end gap-2">
-          {charts?.reach.map((value, index) => {
-            const height = (value / Math.max(...charts.reach)) * 100;
+          {charts?.reach?.map((value, index) => {
+            const height = maxReach > 0 ? (value / maxReach) * 100 : 0;
             return (
               <div key={index} className="flex-1 flex flex-col items-center group">
                 <div 
@@ -106,7 +109,7 @@ export default function Analytics() {
                 </div>
                 {/* Only show label for every nth item to avoid clutter */}
                 <span className="text-[10px] text-gray-400 mt-2 rotate-0 truncate w-full text-center">
-                   {index % Math.ceil(charts.reach.length / 10) === 0 ? charts.labels[index] : ''}
+                   {index % Math.ceil((charts.reach.length || 1) / 10) === 0 ? charts.labels[index] : ''}
                 </span>
               </div>
             );
@@ -119,22 +122,26 @@ export default function Analytics() {
         <div className="bg-white p-6 rounded-xl border shadow-sm">
           <h3 className="text-lg font-semibold mb-4">Platform Performance</h3>
           <div className="space-y-4">
-            {Object.entries(platformBreakdown || {}).map(([platform, stats]) => (
-              <div key={platform} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${
-                    platform === 'facebook' ? 'bg-blue-600' :
-                    platform === 'instagram' ? 'bg-pink-600' :
-                    platform === 'twitter' ? 'bg-black' : 'bg-blue-700'
-                  }`} />
-                  <span className="capitalize font-medium text-gray-700">{platform}</span>
+            {Object.keys(platformBreakdown || {}).length === 0 ? (
+                <p className="text-gray-500 text-sm">No platform data available.</p>
+            ) : (
+                Object.entries(platformBreakdown || {}).map(([platform, stats]) => (
+                <div key={platform} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${
+                        platform === 'facebook' ? 'bg-blue-600' :
+                        platform === 'instagram' ? 'bg-pink-600' :
+                        platform === 'twitter' ? 'bg-black' : 'bg-blue-700'
+                    }`} />
+                    <span className="capitalize font-medium text-gray-700">{platform}</span>
+                    </div>
+                    <div className="flex gap-4 text-sm">
+                    <span className="text-gray-500">Reach: <strong className="text-gray-900">{stats.reach}</strong></span>
+                    <span className="text-gray-500">Eng: <strong className="text-gray-900">{stats.engagement}</strong></span>
+                    </div>
                 </div>
-                <div className="flex gap-4 text-sm">
-                  <span className="text-gray-500">Reach: <strong className="text-gray-900">{stats.reach}</strong></span>
-                  <span className="text-gray-500">Eng: <strong className="text-gray-900">{stats.engagement}</strong></span>
-                </div>
-              </div>
-            ))}
+                ))
+            )}
           </div>
         </div>
 
@@ -162,12 +169,14 @@ function KPICard({ title, value, change, icon: Icon, trend }) {
         <div className="p-2 bg-gray-50 rounded-lg">
           <Icon className="w-5 h-5 text-gray-600" />
         </div>
-        <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
-          trend === 'up' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-        }`}>
-          {trend === 'up' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-          {change}
-        </div>
+        {change && (
+            <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
+            trend === 'up' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+            }`}>
+            {trend === 'up' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+            {change}
+            </div>
+        )}
       </div>
       <div>
         <p className="text-sm text-gray-500 mb-1">{title}</p>

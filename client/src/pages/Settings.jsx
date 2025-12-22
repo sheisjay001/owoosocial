@@ -26,43 +26,10 @@ export default function Settings() {
   const [showModal, setShowModal] = useState(false);
   const [modalPlatform, setModalPlatform] = useState('');
   const [formData, setFormData] = useState({ identifier: '', name: '', apiKey: '' });
-  const [apiKeys, setApiKeys] = useState({ resend: '', sendgrid: '', openai: '' });
-  const [savingKeys, setSavingKeys] = useState(false);
 
   useEffect(() => {
     fetchConnections();
-    fetchApiKeys();
   }, []);
-
-  const fetchApiKeys = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const { data } = await axios.get('/api/auth/api-keys', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setApiKeys(data.data);
-    } catch (error) {
-      console.error('Error fetching API keys:', error);
-    }
-  };
-
-  const handleSaveKeys = async (e) => {
-    e.preventDefault();
-    setSavingKeys(true);
-    try {
-      const token = localStorage.getItem('authToken');
-      await axios.put('/api/auth/api-keys', apiKeys, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      alert('API Keys updated successfully');
-      fetchApiKeys();
-    } catch (error) {
-      console.error('Error updating keys:', error);
-      alert('Failed to update API keys');
-    } finally {
-      setSavingKeys(false);
-    }
-  };
 
   const fetchConnections = async () => {
     try {

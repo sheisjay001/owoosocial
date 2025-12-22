@@ -3,20 +3,14 @@ const Post = require('../models/Post');
 const Newsletter = require('../models/Newsletter');
 const Podcast = require('../models/Podcast');
 
-// In-memory store for fallback
-let mockReports = [];
-
 exports.generateReport = async (req, res) => {
   try {
     const { type, startDate, endDate } = req.body;
     
-    // Mock data aggregation logic (simulating DB queries)
-    // In a real app, we would query the DB with date ranges
-    
     // 1. Gather Social Stats
     let socialStats = { totalPosts: 0, totalLikes: 0, totalImpressions: 0, engagementRate: 0 };
     try {
-        const posts = await Post.find(); // Filter by date in real app
+        const posts = await Post.find(); // Filter by date in real app if needed, currently global
         socialStats.totalPosts = posts.length;
         posts.forEach(p => {
             if(p.analytics) {
@@ -29,8 +23,7 @@ exports.generateReport = async (req, res) => {
         }
     } catch (e) {
         console.log("Error fetching posts for report:", e.message);
-        // Fallback mock data
-        socialStats = { totalPosts: 12, totalLikes: 450, totalImpressions: 12000, engagementRate: 3.8 };
+        // No mock fallback
     }
 
     // 2. Gather Newsletter Stats
@@ -38,12 +31,12 @@ exports.generateReport = async (req, res) => {
     try {
         const newsletters = await Newsletter.find();
         newsletterStats.totalSent = newsletters.filter(n => n.status === 'sent').length;
-        // Mock averages
-        newsletterStats.avgOpenRate = 24.5; 
-        newsletterStats.totalSubscribers = 1500;
+        // Real aggregation logic (if data exists)
+        // Currently assuming newsletter model might not have open rate tracking fully implemented
+        // So keeping as 0 if not found
     } catch (e) {
         console.log("Error fetching newsletters for report:", e.message);
-        newsletterStats = { totalSent: 4, avgOpenRate: 22.1, totalSubscribers: 1250 };
+        // No mock fallback
     }
 
     // 3. Gather Podcast Stats
@@ -56,10 +49,9 @@ exports.generateReport = async (req, res) => {
                 podcastStats.totalDownloads += p.analytics.totalDownloads || 0;
             }
         });
-        podcastStats.avgListenTime = 65; // Mock avg
     } catch (e) {
          console.log("Error fetching podcasts for report:", e.message);
-         podcastStats = { totalEpisodes: 3, totalDownloads: 3400, avgListenTime: 72 };
+         // No mock fallback
     }
 
     const reportData = {
@@ -77,15 +69,7 @@ exports.generateReport = async (req, res) => {
         generatedAt: new Date()
     };
 
-    let report;
-    try {
-        report = await Report.create(reportData);
-    } catch (dbError) {
-        console.log('DB Error, using in-memory store:', dbError.message);
-        report = { ...reportData, _id: Date.now().toString() };
-        mockReports.push(report);
-    }
-
+    const report = await Report.create(reportData);
     res.status(201).json({ success: true, data: report });
 
   } catch (error) {
@@ -95,13 +79,7 @@ exports.generateReport = async (req, res) => {
 
 exports.getReports = async (req, res) => {
   try {
-    let reports;
-    try {
-        reports = await Report.find().sort({ generatedAt: -1 });
-    } catch (dbError) {
-        console.log('DB Error, using in-memory store:', dbError.message);
-        reports = mockReports.sort((a, b) => new Date(b.generatedAt) - new Date(a.generatedAt));
-    }
+    const reports = await Report.find().sort({ generatedAt: -1 });
     res.status(200).json({ success: true, count: reports.length, data: reports });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
