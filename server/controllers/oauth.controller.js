@@ -261,10 +261,12 @@ exports.handleCallback = async (req, res) => {
     await user.save();
 
     // 5. Redirect back to Frontend
-    res.redirect('http://localhost:5173/settings?success=connected');
+    const clientUrl = process.env.CLIENT_URL || process.env.APP_URL || 'http://localhost:5173';
+    res.redirect(`${clientUrl}/settings?success=connected`);
 
   } catch (error) {
     console.error('OAuth Callback Error:', error.response?.data || error.message);
-    res.redirect(`http://localhost:5173/settings?error=${encodeURIComponent(error.message)}`);
+    const clientUrl = process.env.CLIENT_URL || process.env.APP_URL || 'http://localhost:5173';
+    res.redirect(`${clientUrl}/settings?error=${encodeURIComponent(error.message)}`);
   }
 };
