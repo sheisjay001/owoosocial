@@ -490,12 +490,14 @@ export default function Settings() {
                     </ol>
                 ) : modalPlatform === 'WhatsApp' ? (
                     <ol className="list-decimal pl-4 space-y-1">
-                        <li>Create a WhatsApp Group and add our bot/number.</li>
-                        <li>Open <strong>WhatsApp Web</strong> and click into the group.</li>
-                        <li>Right-click the <strong>Group Name/Title</strong> at the very top of the chat.</li>
-                        <li>Select <strong>Inspect</strong> from the menu that appears.</li>
-                        <li>Press <strong>Ctrl+F</strong> and search for <code>@g.us</code>.</li>
-                        <li>Copy the ID (e.g. <code>123...@g.us</code>) and paste below.</li>
+                        <li><strong>Step 1:</strong> Go to <a href="https://developers.facebook.com/apps" target="_blank" className="underline font-bold text-blue-600">Meta Developers</a>.</li>
+                        <li>Select your App &gt; WhatsApp &gt; API Setup.</li>
+                        <li>Copy the <strong>Phone Number ID</strong> and paste it in the "Phone Number ID" field below.</li>
+                        <li>Copy the <strong>Temporary/Permanent Access Token</strong> and paste it in the "Access Token" field below.</li>
+                        <li><strong>Step 2 (For Group Sending):</strong></li>
+                        <li>Open WhatsApp Web, right-click the Group Name, select Inspect.</li>
+                        <li>Search for <code>@g.us</code> to find the Group ID (e.g. <code>123...@g.us</code>).</li>
+                        <li>Use this Group ID when creating a post in the "Target Audience" field.</li>
                     </ol>
                 ) : (modalPlatform === 'Facebook' || modalPlatform === 'Instagram') ? (
                     <ol className="list-decimal pl-4 space-y-1">
@@ -540,7 +542,7 @@ export default function Settings() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {modalPlatform === 'WhatsApp' ? 'Group ID' : 
+                  {modalPlatform === 'WhatsApp' ? 'Phone Number ID' : 
                    modalPlatform === 'Telegram' ? 'Chat ID / Username' : 
                    'Username / Page ID'}
                 </label>
@@ -549,7 +551,7 @@ export default function Settings() {
                   required
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={
-                      modalPlatform === 'WhatsApp' ? 'e.g. 120363025@g.us' : 
+                      modalPlatform === 'WhatsApp' ? 'e.g. 100561234567890' : 
                       modalPlatform === 'Telegram' ? 'e.g. @mychannel' : 
                       'e.g. mypage_123'
                   }

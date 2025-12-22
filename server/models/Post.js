@@ -13,6 +13,11 @@ const postSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   targetAudience: {
     type: String, // For WhatsApp Group ID or Telegram Chat ID
     required: false,

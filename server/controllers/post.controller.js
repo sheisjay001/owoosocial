@@ -20,6 +20,7 @@ exports.createPost = async (req, res) => {
         scheduledTime,
         status: status || 'draft',
         targetAudience,
+        user: req.user ? req.user.id : null // Save User ID
       });
     } catch (dbError) {
       console.log('DB Error, using in-memory store:', dbError.message);
@@ -33,6 +34,7 @@ exports.createPost = async (req, res) => {
         scheduledTime,
         status: status || 'draft',
         targetAudience,
+        user: req.user ? req.user.id : null,
         createdAt: new Date()
       };
       mockPosts.push(post);
@@ -52,12 +54,16 @@ exports.createPost = async (req, res) => {
 
             const connection = user?.connections?.find(c => c.platform.toLowerCase() === platform.toLowerCase());
 
-            if (connection && connection.apiKey) {
+            if (connection) {
                 console.log(`Attempting to publish to ${platform}...`);
                 
-                if (platform.toLowerCase() === 'facebook') {
+                if (platform.toLowerCase() === 'facebook' && connection.apiKey) {
                      await socialService.postToFacebook(content, connection.apiKey, connection.identifier);
                      console.log('Successfully published to Facebook');
+                } else if (platform.toLowerCase() === 'whatsapp') {
+                     // Use the wrapper which handles credentials
+                     await socialService.publishToWhatsApp(post);
+                     console.log('Successfully published to WhatsApp');
                 }
                 
                 // Update status to confirm published
@@ -68,7 +74,7 @@ exports.createPost = async (req, res) => {
                     if (idx !== -1) mockPosts[idx].status = 'published';
                 }
             } else {
-                console.log(`Skipping publish: No ${platform} connection found with API Key.`);
+                console.log(`Skipping publish: No ${platform} connection found.`);
             }
         } catch (err) {
             console.error('Auto-posting failed:', err.message);

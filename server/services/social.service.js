@@ -41,14 +41,36 @@ exports.postToInstagram = async (content, imageUrl, accessToken, accountId) => {
     }
 };
 
-exports.postToTwitter = async (content, accessToken) => {
-    console.log('Posting to Twitter (Mock):', content);
-    return { success: true, id: 'mock_twitter_id', platform: 'Twitter' };
+exports.postToWhatsApp = async (content, accessToken, phoneNumberId, to) => {
+    try {
+        console.log(`[WhatsApp] Posting to ${to} via ${phoneNumberId}`);
+        const url = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
+        
+        const payload = {
+            messaging_product: "whatsapp",
+            to: to,
+            type: "text",
+            text: { body: content }
+        };
+
+        const response = await axios.post(url, payload, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        return { success: true, id: response.data.messages[0].id, platform: 'WhatsApp' };
+    } catch (error) {
+        console.error('WhatsApp Post Error:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.error?.message || 'Failed to post to WhatsApp');
+    }
 };
 
 // --- Scheduler Wrappers (High Level) ---
 // These are called by scheduler.service.js with the full Post object
 // Note: Currently these are MOCKS because the Post object doesn't have the User ID to fetch tokens.
+// UPDATE: Post now has User ID, we should populate and use it.
 
 exports.publishToFacebook = async (post) => {
     console.log('[Facebook] Simulating publish:', post.topic);
@@ -71,10 +93,35 @@ exports.publishToLinkedIn = async (post) => {
 };
 
 exports.publishToWhatsApp = async (post) => {
-    console.log('[WhatsApp] Simulating publish to Group:', post.targetAudience);
-    console.log('Content:', post.content);
-    // Real implementation would use Twilio Client here
-    return { success: true, id: 'mock_wa_id', platform: 'WhatsApp' };
+    try {
+        // Attempt to fetch user credentials if available
+        let accessToken = null;
+        let phoneNumberId = null;
+
+        if (post.user) {
+            const User = require('../models/User');
+            // If post.user is just an ID, fetch the user. If populated, use it.
+            const user = post.user.connections ? post.user : await User.findById(post.user);
+            
+            if (user && user.connections) {
+                const connection = user.connections.find(c => c.platform.toLowerCase() === 'whatsapp');
+                if (connection) {
+                    accessToken = connection.apiKey; // Assuming apiKey holds the Token
+                    phoneNumberId = connection.identifier; // Assuming identifier holds the Phone Number ID
+                }
+            }
+        }
+
+        if (accessToken && phoneNumberId) {
+             return await exports.postToWhatsApp(post.content, accessToken, phoneNumberId, post.targetAudience);
+        }
+
+        console.log('[WhatsApp] No credentials found. Simulating publish to Group:', post.targetAudience);
+        return { success: true, id: 'mock_wa_id', platform: 'WhatsApp', note: 'Simulated (No Credentials)' };
+    } catch (error) {
+        console.error('Publish to WhatsApp Wrapper Error:', error.message);
+        throw error;
+    }
 };
 
 exports.publishToTelegram = async (post) => {
