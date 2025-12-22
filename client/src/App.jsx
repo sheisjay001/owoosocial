@@ -11,6 +11,7 @@ import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import Domains from './pages/Domains';
 import Newsletters from './pages/Newsletters';
+import Subscribers from './pages/Subscribers';
 import Podcasts from './pages/Podcasts';
 import Reports from './pages/Reports';
 import Billing from './pages/Billing';
@@ -52,6 +53,7 @@ function App() {
             <Route path="brands/new" element={<BrandSetup />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="newsletters" element={<Newsletters />} />
+            <Route path="subscribers" element={<Subscribers />} />
             <Route path="podcasts" element={<Podcasts />} />
             <Route path="reports" element={<Reports />} />
             <Route path="billing" element={<Billing />} />

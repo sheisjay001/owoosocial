@@ -1,5 +1,75 @@
 const Subscriber = require('../models/Subscriber');
 
+const fs = require('fs');
+const csv = require('csv-parser');
+
+// @desc    Import subscribers from CSV
+// @route   POST /api/subscribers/upload-csv
+// @access  Private
+exports.importSubscribers = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'Please upload a CSV file' });
+        }
+
+        const results = [];
+        const errors = [];
+        let addedCount = 0;
+
+        fs.createReadStream(req.file.path)
+            .pipe(csv())
+            .on('data', (data) => {
+                // Normalize keys to lowercase to be safe
+                const cleanData = {};
+                Object.keys(data).forEach(key => {
+                    cleanData[key.toLowerCase().trim()] = data[key];
+                });
+                
+                if (cleanData.email) {
+                    results.push({
+                        email: cleanData.email,
+                        name: cleanData.name || cleanData.firstname || cleanData.first_name || ''
+                    });
+                }
+            })
+            .on('end', async () => {
+                // Delete temp file
+                fs.unlinkSync(req.file.path);
+
+                for (const item of results) {
+                    try {
+                        await Subscriber.updateOne(
+                            { user: req.user.id, email: item.email },
+                            { 
+                                $set: { 
+                                    name: item.name,
+                                    status: 'subscribed' 
+                                } 
+                            },
+                            { upsert: true }
+                        );
+                        addedCount++;
+                    } catch (e) {
+                        errors.push({ email: item.email, error: e.message });
+                    }
+                }
+
+                res.status(200).json({
+                    success: true,
+                    message: `Successfully processed ${addedCount} subscribers from CSV.`,
+                    count: addedCount,
+                    errors: errors.length > 0 ? errors : undefined
+                });
+            })
+            .on('error', (err) => {
+                 res.status(500).json({ success: false, error: 'Failed to parse CSV: ' + err.message });
+            });
+
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
 // @desc    Get all subscribers for the current user
 // @route   GET /api/subscribers
 // @access  Private
