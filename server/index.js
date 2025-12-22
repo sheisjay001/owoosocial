@@ -34,6 +34,25 @@ app.options('*', cors());
 
 app.use(express.json());
 
+// DEBUG: Log all incoming requests to Express
+app.use((req, res, next) => {
+  console.log(`[Express] Incoming Request: ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
+// DEBUG: Explicit test route to verify POST works
+app.post('/api/test-post', (req, res) => {
+  console.log('POST /api/test-post hit');
+  res.status(200).json({ success: true, message: 'POST works!' });
+});
+
+// DEBUG: Explicit registration route override (to test user suggestion)
+app.post('/api/auth/register-debug', (req, res) => {
+  console.log('DEBUG REGISTER HIT:', req.body);
+  res.status(200).json({ success: true, message: 'Debug Register Works' });
+});
+
 // Routes - Mount on both /api and root to handle Vercel rewrites robustly
 const routes = [
   { path: '/ai', route: aiRoutes },

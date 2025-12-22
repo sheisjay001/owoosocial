@@ -5,7 +5,7 @@ const connectDB = require('../server/config/db');
 module.exports = async (req, res) => {
   try {
     // Log debug info
-    console.log(`[Vercel] ${req.method} ${req.url}`);
+    console.log(`[Vercel Entry] Method: ${req.method}, URL: ${req.url}`);
     
     // Check environment variables
     if (!process.env.MONGO_URI) {
@@ -13,8 +13,8 @@ module.exports = async (req, res) => {
     }
 
     // Handle OPTIONS request (CORS Preflight) directly
-    // This is crucial because Vercel sometimes doesn't pass OPTIONS to Express correctly
     if (req.method === 'OPTIONS') {
+      console.log('[Vercel] Handling OPTIONS request');
       res.setHeader('Access-Control-Allow-Credentials', true);
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -30,6 +30,7 @@ module.exports = async (req, res) => {
     await connectDB();
     
     // Allow the Express app to handle the request
+    console.log('[Vercel] Passing to Express app...');
     app(req, res);
   } catch (error) {
     console.error('Vercel Function Error:', error);
