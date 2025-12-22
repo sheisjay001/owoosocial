@@ -259,9 +259,29 @@ export default function CreatePost() {
                     <ImageIcon className="w-4 h-4" />
                     AI Image Prompt
                   </h3>
-                  <p className="text-purple-900 text-sm italic">
+                  <p className="text-purple-900 text-sm italic mb-4">
                     "{result.imagePrompt}"
                   </p>
+                  <div className="rounded-lg overflow-hidden shadow-sm bg-gray-200 min-h-[200px] flex items-center justify-center group/image relative">
+                      <img 
+                        src={`https://image.pollinations.ai/prompt/${encodeURIComponent(result.imagePrompt)}`} 
+                        alt="AI Generated Visualization" 
+                        className="w-full h-auto object-cover"
+                        loading="lazy"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.querySelector('.error-msg').style.display = 'block'; }}
+                      />
+                      <div className="error-msg hidden text-gray-500 text-sm p-4 text-center">
+                          Image preview unavailable
+                      </div>
+                      <a 
+                        href={`https://image.pollinations.ai/prompt/${encodeURIComponent(result.imagePrompt)}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="absolute bottom-2 right-2 bg-black/50 hover:bg-black/70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover/image:opacity-100 transition-opacity"
+                      >
+                        Download / View Full
+                      </a>
+                  </div>
                 </div>
               )}
 

@@ -258,7 +258,7 @@ exports.getMe = async (req, res) => {
 
 exports.addConnection = async (req, res) => {
   try {
-    const { platform, identifier, name } = req.body;
+    const { platform, identifier, name, apiKey } = req.body;
     let user;
     
     try {
@@ -272,7 +272,7 @@ exports.addConnection = async (req, res) => {
       const exists = user.connections && user.connections.find(c => c.platform === platform && c.identifier === identifier);
       if (!exists) {
         user.connections = user.connections || [];
-        user.connections.push({ platform, identifier, name });
+        user.connections.push({ platform, identifier, name, apiKey });
         await user.save();
       }
       res.status(200).json({ success: true, data: user.connections });
@@ -286,7 +286,7 @@ exports.addConnection = async (req, res) => {
           mockUser.connections = mockUser.connections || [];
           // Avoid duplicates
           if (!mockUser.connections.find(c => c.platform === platform && c.identifier === identifier)) {
-             mockUser.connections.push({ platform, identifier, name, connectedAt: new Date() });
+             mockUser.connections.push({ platform, identifier, name, apiKey, connectedAt: new Date() });
           }
           res.status(200).json({ success: true, data: mockUser.connections });
       } else {
@@ -294,7 +294,7 @@ exports.addConnection = async (req, res) => {
           res.status(200).json({ 
             success: true, 
             data: [
-              { platform, identifier, name, connectedAt: new Date() }
+              { platform, identifier, name, apiKey, connectedAt: new Date() }
             ] 
           });
       }

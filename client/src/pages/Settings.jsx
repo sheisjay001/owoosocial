@@ -25,7 +25,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [modalPlatform, setModalPlatform] = useState('');
-  const [formData, setFormData] = useState({ identifier: '', name: '' });
+  const [formData, setFormData] = useState({ identifier: '', name: '', apiKey: '' });
 
   useEffect(() => {
     fetchConnections();
@@ -48,7 +48,7 @@ export default function Settings() {
 
   const handleConnect = (platform) => {
     setModalPlatform(platform);
-    setFormData({ identifier: '', name: '' });
+    setFormData({ identifier: '', name: '', apiKey: '' });
     setShowModal(true);
   };
 
@@ -61,7 +61,8 @@ export default function Settings() {
       await axios.post('/api/auth/connections', {
         platform: modalPlatform,
         identifier: formData.identifier,
-        name: formData.name
+        name: formData.name,
+        apiKey: formData.apiKey
       }, config);
 
       setShowModal(false);
@@ -544,11 +545,12 @@ export default function Settings() {
                   onChange={e => setFormData({...formData, name: e.target.value})}
                 />
               </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {modalPlatform === 'WhatsApp' ? 'Group ID' : 
                    modalPlatform === 'Telegram' ? 'Chat ID / Username' : 
-                   'API Key / Token'}
+                   'Username / Page ID'}
                 </label>
                 <input
                   type="text"
@@ -557,12 +559,31 @@ export default function Settings() {
                   placeholder={
                       modalPlatform === 'WhatsApp' ? 'e.g. 120363025@g.us' : 
                       modalPlatform === 'Telegram' ? 'e.g. @mychannel' :
-                      'e.g. sk_live_...'
+                      'e.g. mypage_123'
                   }
                   value={formData.identifier}
                   onChange={e => setFormData({...formData, identifier: e.target.value})}
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {modalPlatform === 'WhatsApp' ? 'Verify Token (Optional)' : 
+                   modalPlatform === 'Telegram' ? 'Bot Token (Optional if Global)' : 
+                   'Access Token / API Key'}
+                </label>
+                <input
+                  type="password"
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="Paste your secret key/token here"
+                  value={formData.apiKey}
+                  onChange={e => setFormData({...formData, apiKey: e.target.value})}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                   Your keys are encrypted and stored securely.
+                </p>
+              </div>
+
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   type="button"

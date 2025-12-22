@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema({
       platform: String, // 'whatsapp', 'telegram', etc.
       identifier: String, // Group ID, Chat ID
       name: String, // 'My Channel'
+      apiKey: String, // API Key or Access Token
       connectedAt: { type: Date, default: Date.now }
     }
   ]
