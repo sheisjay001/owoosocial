@@ -1,7 +1,7 @@
 const Subscriber = require('../models/Subscriber');
 
-const fs = require('fs');
 const csv = require('csv-parser');
+const { Readable } = require('stream');
 
 // @desc    Import subscribers from CSV
 // @route   POST /api/subscribers/upload-csv
@@ -16,7 +16,10 @@ exports.importSubscribers = async (req, res) => {
         const errors = [];
         let addedCount = 0;
 
-        fs.createReadStream(req.file.path)
+        // Convert buffer to stream
+        const stream = Readable.from(req.file.buffer.toString());
+
+        stream
             .pipe(csv())
             .on('data', (data) => {
                 // Normalize keys to lowercase to be safe
@@ -33,9 +36,8 @@ exports.importSubscribers = async (req, res) => {
                 }
             })
             .on('end', async () => {
-                // Delete temp file
-                fs.unlinkSync(req.file.path);
-
+                // No temp file to delete
+                
                 for (const item of results) {
                     try {
                         await Subscriber.updateOne(

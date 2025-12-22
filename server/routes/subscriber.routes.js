@@ -3,7 +3,8 @@ const router = express.Router();
 const subscriberController = require('../controllers/subscriber.controller');
 const { protect } = require('../middleware/auth');
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 router.use(protect);
 

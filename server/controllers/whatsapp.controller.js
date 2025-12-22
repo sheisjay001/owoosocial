@@ -1,7 +1,7 @@
 const WhatsAppContact = require('../models/WhatsAppContact');
 const Broadcast = require('../models/Broadcast');
-const fs = require('fs');
 const csv = require('csv-parser');
+const { Readable } = require('stream');
 
 // --- Contacts ---
 
@@ -48,7 +48,9 @@ exports.importContacts = async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
     const results = [];
-    fs.createReadStream(req.file.path)
+    const stream = Readable.from(req.file.buffer.toString());
+    
+    stream
         .pipe(csv())
         .on('data', (data) => {
             // Flexible column matching
@@ -79,7 +81,6 @@ exports.importContacts = async (req, res) => {
                 }
             }
             
-            fs.unlinkSync(req.file.path); // Clean up
             res.json({ success: true, message: `Processed ${results.length} rows. Added/Updated: ${addedCount}. Errors: ${errorCount}` });
         })
         .on('error', (err) => {
