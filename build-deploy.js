@@ -48,14 +48,21 @@ try {
   
   // Clean install to avoid lockfile issues on Vercel
   if (process.env.VERCEL) {
-      console.log('Vercel environment detected. Using clean install.');
+      console.log('Vercel environment detected. Fixing lockfile issues...');
       // Remove package-lock.json if it exists to prevent platform conflicts
       const lockFile = path.join(clientDir, 'package-lock.json');
       if (fs.existsSync(lockFile)) {
-          // fs.unlinkSync(lockFile); // Optional: unsafe to delete committed files, better to just run install
+          console.log('Removing client/package-lock.json to avoid platform conflicts');
+          fs.unlinkSync(lockFile); 
+      }
+      const nodeModules = path.join(clientDir, 'node_modules');
+      if (fs.existsSync(nodeModules)) {
+          console.log('Removing client/node_modules to ensure clean install');
+          fs.rmSync(nodeModules, { recursive: true, force: true });
       }
   }
 
+  console.log('Installing client dependencies...');
   runCommand('npm install', clientDir);
   
   // Verify index.html exists before building
