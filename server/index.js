@@ -85,6 +85,7 @@ const routes = [
   { path: '/brands', route: brandRoutes },
   { path: '/oauth', route: oauthRoutes },
   { path: '/leads', route: leadRoutes },
+  { path: '/subscribers', route: subscriberRoutes },
   { path: '/status', route: statusRoutes },
 ];
 

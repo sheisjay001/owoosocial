@@ -4,6 +4,7 @@ import { cn } from '../lib/utils';
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+  { icon: Sparkles, label: 'AI Tools', path: '/ai-tools' },
   { icon: PenTool, label: 'Create Post', path: '/create' },
   { icon: MessageSquare, label: 'Inbox', path: '/inbox' },
   { icon: Mail, label: 'Newsletters', path: '/newsletters' },

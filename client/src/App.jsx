@@ -45,6 +45,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="create" element={<CreatePost />} />
+            <Route path="ai-tools" element={<AITools />} />
             <Route path="inbox" element={<Inbox />} />
             <Route path="brands" element={<Brands />} />
             <Route path="brands/new" element={<BrandSetup />} />

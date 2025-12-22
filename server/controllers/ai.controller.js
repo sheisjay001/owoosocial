@@ -1,42 +1,52 @@
 const Groq = require('groq-sdk');
+const OpenAI = require('openai');
+const User = require('../models/User');
 
-const groq = new Groq({
+// System Default
+const systemGroq = new Groq({
   apiKey: process.env.GROQ_API_KEY || 'mock-key',
 });
 
+// Helper: Get best available AI client
+const getAIClient = async (userId) => {
+    let client = { type: 'groq', instance: systemGroq, model: 'llama3-8b-8192' };
+    
+    if (userId) {
+        try {
+            const user = await User.findById(userId).select('+apiKeys');
+            if (user?.apiKeys?.openai && user.apiKeys.openai.startsWith('sk-')) {
+                return { 
+                    type: 'openai', 
+                    instance: new OpenAI({ apiKey: user.apiKeys.openai }),
+                    model: 'gpt-4o' // Default to 4o for best performance/vision
+                };
+            }
+        } catch (e) {
+            console.log('Error fetching user keys for AI:', e.message);
+        }
+    }
+    
+    // Check if system key is valid
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey || apiKey === 'mock-key' || !apiKey.startsWith('gsk_')) {
+        return { type: 'mock', instance: null };
+    }
+
+    return client;
+};
+
+// 1. Core Content Generator (Enhanced)
 exports.generateContent = async (req, res) => {
   try {
     const { topic, platform, tone, brandDescription } = req.body;
+    const { type, instance, model } = await getAIClient(req.user?.id);
 
-    if (!topic) {
-        return res.status(400).json({ success: false, message: 'Topic is required' });
-    }
-
-    const getMockResponse = () => {
-        const cleanTopic = topic.replace(/\s+/g, '');
-        return {
-          content: `🚀 Exciting news about ${topic}! We at ${brandDescription || 'our company'} are thrilled to share this.\n\n#${cleanTopic} #Innovation #Tech`,
-          hashtags: ["#Innovation", `#${cleanTopic}`, "#Tech", "#Growth"],
-          imagePrompt: `A futuristic and professional image representing ${topic} in a ${tone} style.`
-        };
-    };
-
-    // Check if API key is missing or is a placeholder/invalid
-    const apiKey = process.env.GROQ_API_KEY;
-    const isInvalidKey = !apiKey || apiKey === 'YOUR_GROQ_API_KEY_HERE' || apiKey === 'mock-key' || !apiKey.startsWith('gsk_');
-
-    if (isInvalidKey) {
-      console.log('Using Mock AI Response (Invalid or missing GROQ API Key)');
-      return res.status(200).json({
-        success: true,
-        data: getMockResponse()
-      });
-    }
+    if (type === 'mock') return res.json({ success: true, data: getMockResponse(topic, tone) });
 
     const prompt = `
       Act as an expert social media manager.
       Create a ${tone} post for ${platform} about "${topic}".
-      Context/Brand Description: ${brandDescription}
+      Context/Brand: ${brandDescription || 'General'}
       
       Output format JSON:
       {
@@ -46,33 +56,278 @@ exports.generateContent = async (req, res) => {
       }
     `;
 
-    try {
-        const completion = await groq.chat.completions.create({
-          messages: [{ role: "user", content: prompt }],
-          model: "llama3-8b-8192",
-          response_format: { type: "json_object" },
-        });
-
-        const result = JSON.parse(completion.choices[0].message.content);
-
-        res.status(200).json({
-          success: true,
-          data: result
-        });
-    } catch (apiError) {
-        console.error('Groq API Error (Falling back to mock):', apiError.message);
-        return res.status(200).json({
-            success: true,
-            data: getMockResponse()
-        });
-    }
-
+    const response = await generateText(type, instance, model, prompt);
+    res.json({ success: true, data: response });
   } catch (error) {
-    console.error('AI Generation Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to generate content',
-      error: error.message
-    });
+    handleError(res, error);
   }
 };
+
+// 2. Caption Generator (Multiple Styles)
+exports.generateCaptionVariations = async (req, res) => {
+    try {
+        const { topic, platform, brandDescription } = req.body;
+        const { type, instance, model } = await getAIClient(req.user?.id);
+
+        if (type === 'mock') return res.json({ success: true, data: { funny: "Mock Funny", professional: "Mock Pro", trendy: "Mock Trendy" } });
+
+        const prompt = `
+            Generate 3 distinct caption variations for a ${platform} post about "${topic}".
+            Context: ${brandDescription || 'General'}
+            
+            1. Funny/Witty
+            2. Professional/Corporate
+            3. Trendy/Viral
+            
+            Output JSON:
+            {
+                "funny": "Caption...",
+                "professional": "Caption...",
+                "trendy": "Caption..."
+            }
+        `;
+
+        const response = await generateText(type, instance, model, prompt);
+        res.json({ success: true, data: response });
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
+// 3. Hashtag Recommender
+exports.generateHashtags = async (req, res) => {
+    try {
+        const { topic, niche } = req.body;
+        const { type, instance, model } = await getAIClient(req.user?.id);
+
+        const prompt = `
+            Suggest 30 relevant, high-reach hashtags for:
+            Topic: ${topic}
+            Niche: ${niche || 'General'}
+            
+            Output JSON:
+            {
+                "hashtags": ["#tag1", "#tag2", ...]
+            }
+        `;
+
+        if (type === 'mock') return res.json({ success: true, data: { hashtags: ['#mock1', '#mock2'] } });
+
+        const response = await generateText(type, instance, model, prompt);
+        res.json({ success: true, data: response });
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
+// 4. Content Calendar Assistant
+exports.generateCalendar = async (req, res) => {
+    try {
+        const { timeframe, goals, brandDescription } = req.body; // timeframe: 'weekly' or 'monthly'
+        const { type, instance, model } = await getAIClient(req.user?.id);
+
+        const prompt = `
+            Create a ${timeframe || 'weekly'} social media content calendar.
+            Goal: ${goals || 'Engagement'}
+            Brand: ${brandDescription || 'General'}
+            
+            Output JSON array of objects:
+            {
+                "calendar": [
+                    { "day": "Monday", "topic": "...", "format": "Reel/Post", "caption_idea": "..." },
+                    ...
+                ]
+            }
+        `;
+
+        if (type === 'mock') return res.json({ success: true, data: { calendar: [] } });
+
+        const response = await generateText(type, instance, model, prompt);
+        res.json({ success: true, data: response });
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
+// 5. Post Rewriter/Optimizer
+exports.rewritePost = async (req, res) => {
+    try {
+        const { draft, goal } = req.body;
+        const { type, instance, model } = await getAIClient(req.user?.id);
+
+        const prompt = `
+            Rewrite and optimize this social media draft for better ${goal || 'engagement'}:
+            
+            Draft: "${draft}"
+            
+            Output JSON:
+            {
+                "original": "${draft}",
+                "optimized": "Rewritten version...",
+                "improvements": ["Changed X to Y", "Added emojis"]
+            }
+        `;
+
+        if (type === 'mock') return res.json({ success: true, data: { optimized: draft + " (Optimized)" } });
+
+        const response = await generateText(type, instance, model, prompt);
+        res.json({ success: true, data: response });
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
+// 6. Carousel/Story Ideas
+exports.generateCarouselIdeas = async (req, res) => {
+    try {
+        const { topic } = req.body;
+        const { type, instance, model } = await getAIClient(req.user?.id);
+
+        const prompt = `
+            Create a 5-7 slide educational carousel outline about "${topic}".
+            
+            Output JSON:
+            {
+                "title": "Hook Title",
+                "slides": [
+                    { "slide": 1, "content": "..." },
+                    { "slide": 2, "content": "..." }
+                ]
+            }
+        `;
+
+        if (type === 'mock') return res.json({ success: true, data: { slides: [] } });
+
+        const response = await generateText(type, instance, model, prompt);
+        res.json({ success: true, data: response });
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
+// 7. Multilingual Support
+exports.translateCaption = async (req, res) => {
+    try {
+        const { caption, language } = req.body;
+        const { type, instance, model } = await getAIClient(req.user?.id);
+
+        const prompt = `
+            Translate this social media caption into ${language}.
+            Maintain the tone and emoji usage.
+            
+            Caption: "${caption}"
+            
+            Output JSON:
+            {
+                "translated": "..."
+            }
+        `;
+
+        if (type === 'mock') return res.json({ success: true, data: { translated: caption + ` (${language})` } });
+
+        const response = await generateText(type, instance, model, prompt);
+        res.json({ success: true, data: response });
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
+// 8. Image-to-Caption (Vision)
+exports.imageToCaption = async (req, res) => {
+    try {
+        const { imageUrl } = req.body;
+        const { type, instance, model } = await getAIClient(req.user?.id);
+
+        if (!imageUrl) return res.status(400).json({ error: 'Image URL required' });
+
+        if (type === 'openai') {
+            const response = await instance.chat.completions.create({
+                model: "gpt-4o",
+                messages: [
+                    {
+                        role: "user",
+                        content: [
+                            { type: "text", text: "Generate an engaging Instagram caption for this image. Include hashtags. Output JSON: { \"caption\": \"...\", \"hashtags\": [...] }" },
+                            { type: "image_url", image_url: { url: imageUrl } },
+                        ],
+                    },
+                ],
+                response_format: { type: "json_object" },
+            });
+            return res.json({ success: true, data: JSON.parse(response.choices[0].message.content) });
+        } 
+        
+        // Fallback for Groq (Llama 3 is text only usually, Llama 3.2 Vision might work if configured)
+        // For now, return mock or error if not supported
+        if (type === 'groq') {
+             // Try Llama 3.2 Vision if available, else mock
+             try {
+                 const completion = await instance.chat.completions.create({
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                { type: "text", text: "Describe this image and write a caption. JSON format." },
+                                { type: "image_url", image_url: { url: imageUrl } }
+                            ]
+                        }
+                    ],
+                    model: "llama-3.2-11b-vision-preview",
+                    response_format: { type: "json_object" },
+                 });
+                 return res.json({ success: true, data: JSON.parse(completion.choices[0].message.content) });
+             } catch (e) {
+                 console.log('Groq Vision failed, likely not supported/enabled:', e.message);
+                 return res.json({ 
+                     success: true, 
+                     data: { 
+                         caption: "AI Vision analysis requires OpenAI Key or supported Groq model. (Mock Caption)", 
+                         hashtags: ["#Mock", "#Vision"] 
+                     } 
+                 });
+             }
+        }
+
+        return res.json({ success: true, data: { caption: "Mock Caption for Image", hashtags: [] } });
+
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
+// --- Helpers ---
+
+async function generateText(type, instance, model, prompt) {
+    if (type === 'openai') {
+        const completion = await instance.chat.completions.create({
+            messages: [{ role: "user", content: prompt }],
+            model: model,
+            response_format: { type: "json_object" },
+        });
+        return JSON.parse(completion.choices[0].message.content);
+    } else {
+        const completion = await instance.chat.completions.create({
+            messages: [{ role: "user", content: prompt }],
+            model: model,
+            response_format: { type: "json_object" },
+        });
+        return JSON.parse(completion.choices[0].message.content);
+    }
+}
+
+function getMockResponse(topic, tone) {
+    return {
+        content: `[Mock] Post about ${topic} in ${tone} style.`,
+        hashtags: ['#mock', '#demo'],
+        imagePrompt: `A ${tone} image of ${topic}`
+    };
+}
+
+function handleError(res, error) {
+    console.error('AI Controller Error:', error.message);
+    res.status(500).json({ 
+        success: false, 
+        error: error.message,
+        hint: "Ensure API keys are set in Settings or .env" 
+    });
+}
