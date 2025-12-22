@@ -30,7 +30,21 @@ export default function Signup() {
       }
     } catch (err) {
       console.error('Registration Error:', err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Registration failed';
+      let errorMsg = 'Registration failed';
+      
+      if (err.response?.data) {
+        if (err.response.data.message) {
+          errorMsg = err.response.data.message;
+        } else if (err.response.data.error) {
+          errorMsg = err.response.data.error;
+        } else {
+          // If it's the 404 JSON we just added
+          errorMsg = JSON.stringify(err.response.data);
+        }
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+
       const statusCode = err.response?.status ? ` (Status: ${err.response.status})` : '';
       setError(errorMsg + statusCode);
     } finally {

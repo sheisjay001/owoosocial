@@ -74,6 +74,19 @@ routes.forEach(({ path, route }) => {
   app.use(path, route); // Fallback if /api is stripped
 });
 
+// DEBUG: Catch-all 404 handler to inspect the path
+app.use('*', (req, res) => {
+  console.log(`[Express] 404 Not Found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    success: false,
+    message: 'Route not found',
+    path: req.path,
+    originalUrl: req.originalUrl,
+    method: req.method,
+    availableRoutes: routes.map(r => r.path)
+  });
+});
+
 app.get('/', (req, res) => {
   res.send('OWOO Social AI Server is running');
 });
