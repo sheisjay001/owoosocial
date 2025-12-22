@@ -39,6 +39,22 @@ const getProviderConfig = (platform) => {
         clientSecret: process.env.TWITTER_CLIENT_SECRET,
         redirectUri
       };
+    case 'spotify':
+      return {
+        authUrl: `https://accounts.spotify.com/authorize?response_type=code&client_id=${process.env.SPOTIFY_CLIENT_ID}&redirect_uri=${redirectUri}&scope=user-read-private%20user-read-email%20user-library-read`,
+        tokenUrl: 'https://accounts.spotify.com/api/token',
+        clientId: process.env.SPOTIFY_CLIENT_ID,
+        clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+        redirectUri
+      };
+    case 'youtube':
+      return {
+        authUrl: `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&scope=https://www.googleapis.com/auth/youtube.upload%20https://www.googleapis.com/auth/userinfo.profile%20https://www.googleapis.com/auth/userinfo.email&access_type=offline&prompt=consent`,
+        tokenUrl: 'https://oauth2.googleapis.com/token',
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        redirectUri
+      };
     default:
       throw new Error('Unsupported platform');
   }
@@ -115,6 +131,29 @@ exports.handleCallback = async (req, res) => {
                 'Authorization': 'Basic ' + Buffer.from(config.clientId + ':' + config.clientSecret).toString('base64')
             }
         });
+    } else if (platform === 'spotify') {
+        const params = new URLSearchParams();
+        params.append('grant_type', 'authorization_code');
+        params.append('code', code);
+        params.append('redirect_uri', config.redirectUri);
+
+        tokenResponse = await axios.post(config.tokenUrl, params, {
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Basic ' + Buffer.from(config.clientId + ':' + config.clientSecret).toString('base64')
+            }
+        });
+    } else if (platform === 'youtube') {
+        const params = new URLSearchParams();
+        params.append('code', code);
+        params.append('client_id', config.clientId);
+        params.append('client_secret', config.clientSecret);
+        params.append('redirect_uri', config.redirectUri);
+        params.append('grant_type', 'authorization_code');
+
+        tokenResponse = await axios.post(config.tokenUrl, params, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
     }
 
     const { access_token, refresh_token, expires_in } = tokenResponse.data;
@@ -187,6 +226,32 @@ exports.handleCallback = async (req, res) => {
          connectionData.platformId = userRes.data.data.id;
          connectionData.name = userRes.data.data.name;
          connectionData.identifier = userRes.data.data.username;
+    } else if (platform === 'spotify') {
+         const userRes = await axios.get('https://api.spotify.com/v1/me', {
+             headers: { Authorization: `Bearer ${access_token}` }
+         });
+         connectionData.platformId = userRes.data.id;
+         connectionData.name = userRes.data.display_name || userRes.data.id;
+         connectionData.identifier = userRes.data.id;
+    } else if (platform === 'youtube') {
+         const channelRes = await axios.get('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+             headers: { Authorization: `Bearer ${access_token}` }
+         });
+         const channel = channelRes.data.items ? channelRes.data.items[0] : null;
+         
+         if (channel) {
+             connectionData.platformId = channel.id;
+             connectionData.name = channel.snippet.title;
+             connectionData.identifier = channel.id;
+         } else {
+             // Fallback if no channel, get user info
+             const userRes = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+                 headers: { Authorization: `Bearer ${access_token}` }
+             });
+             connectionData.platformId = userRes.data.id;
+             connectionData.name = userRes.data.name;
+             connectionData.identifier = userRes.data.email;
+         }
     }
 
     // 4. Update User Connections

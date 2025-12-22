@@ -454,7 +454,7 @@ export default function Settings() {
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-bold mb-4">Connect {modalPlatform}</h3>
             
-            {(modalPlatform === 'Facebook' || modalPlatform === 'Instagram' || modalPlatform === 'Twitter' || modalPlatform === 'LinkedIn') ? (
+            {(modalPlatform === 'Facebook' || modalPlatform === 'Instagram' || modalPlatform === 'Twitter' || modalPlatform === 'LinkedIn' || modalPlatform === 'Spotify' || modalPlatform === 'YouTube') ? (
                <div className="space-y-4">
                   <div className="bg-blue-50 p-4 rounded-md text-sm text-blue-800">
                     <p className="font-medium">Connect your {modalPlatform} account securely.</p>
