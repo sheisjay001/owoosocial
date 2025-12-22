@@ -76,14 +76,18 @@ routes.forEach(({ path, route }) => {
 
 // DEBUG: Catch-all 404 handler to inspect the path
 app.use('*', (req, res) => {
-  console.log(`[Express] 404 Not Found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
+  const debugInfo = {
     path: req.path,
     originalUrl: req.originalUrl,
     method: req.method,
-    availableRoutes: routes.map(r => r.path)
+    baseUrl: req.baseUrl,
+    routesMounted: routes.map(r => r.path)
+  };
+  console.log(`[Express] 404 Not Found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}. Debug: ${JSON.stringify(debugInfo)}`,
+    debug: debugInfo
   });
 });
 

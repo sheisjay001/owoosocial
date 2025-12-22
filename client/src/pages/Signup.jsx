@@ -32,17 +32,31 @@ export default function Signup() {
       console.error('Registration Error:', err);
       let errorMsg = 'Registration failed';
       
-      if (err.response?.data) {
-        if (err.response.data.message) {
-          errorMsg = err.response.data.message;
-        } else if (err.response.data.error) {
-          errorMsg = err.response.data.error;
+      if (err.response) {
+        // Detailed error logging for debugging
+        console.log('Error Response Data:', err.response.data);
+        console.log('Error Response Status:', err.response.status);
+
+        if (err.response.data && typeof err.response.data === 'object') {
+            if (err.response.data.message) {
+                errorMsg = err.response.data.message;
+            } else if (err.response.data.error) {
+                errorMsg = err.response.data.error;
+            } else {
+                errorMsg = JSON.stringify(err.response.data);
+            }
+        } else if (typeof err.response.data === 'string') {
+            errorMsg = err.response.data;
         } else {
-          // If it's the 404 JSON we just added
-          errorMsg = JSON.stringify(err.response.data);
+            errorMsg = `Server error (${err.response.status})`;
         }
       } else if (err.message) {
         errorMsg = err.message;
+      }
+
+      // Ensure errorMsg is a string
+      if (typeof errorMsg === 'object') {
+        errorMsg = JSON.stringify(errorMsg);
       }
 
       const statusCode = err.response?.status ? ` (Status: ${err.response.status})` : '';
@@ -134,13 +148,27 @@ export default function Signup() {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm">
-          <p className="text-gray-600">
+        <div className="mt-4 text-center">
+           <button
+             type="button"
+             onClick={async () => {
+               try {
+                 const res = await axios.post('/api/test-post');
+                 alert('Test API Success: ' + JSON.stringify(res.data));
+               } catch (e) {
+                 alert('Test API Failed: ' + (e.response ? JSON.stringify(e.response.data) : e.message));
+               }
+             }}
+             className="text-xs text-gray-500 underline"
+           >
+             Debug: Test API Connectivity
+           </button>
+        </div>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600">
             Already have an account?{' '}
-            <Link
-              to="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
               Sign in
             </Link>
           </p>
