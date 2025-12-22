@@ -29,7 +29,10 @@ export default function Signup() {
         navigate('/');
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
+      console.error('Registration Error:', err);
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Registration failed';
+      const statusCode = err.response?.status ? ` (Status: ${err.response.status})` : '';
+      setError(errorMsg + statusCode);
     } finally {
       setLoading(false);
     }
