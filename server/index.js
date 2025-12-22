@@ -30,7 +30,7 @@ app.use(cors({
 }));
 
 // Handle preflight requests explicitly
-app.options(cors()); // Enable CORS preflight for all routes
+// app.options('*', cors()); // Removed to avoid routing error. Global cors() middleware handles this.
 
 app.use(express.json());
 
