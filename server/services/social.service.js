@@ -1,80 +1,54 @@
-const TelegramBot = require('node-telegram-bot-api');
+const axios = require('axios');
 
-// Initialize Telegram Bot if token exists
-// Get this from @BotFather on Telegram
-const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
-let bot = null;
-if (telegramToken) {
-  bot = new TelegramBot(telegramToken, { polling: false });
-}
-
-const socialService = {
-  publishToInstagram: async (post) => {
-    console.log(`[Instagram API] Uploading image: ${post.imagePrompt || 'No Image'}`);
-    console.log(`[Instagram API] Setting caption: ${post.content}`);
-    return { platformId: `ig_${Date.now()}`, url: `https://instagram.com/p/mock${Date.now()}` };
-  },
-
-  publishToTwitter: async (post) => {
-    console.log(`[Twitter API] Tweeting: ${post.content.substring(0, 280)}`);
-    return { platformId: `tw_${Date.now()}`, url: `https://twitter.com/user/status/${Date.now()}` };
-  },
-
-  publishToLinkedIn: async (post) => {
-    console.log(`[LinkedIn API] Posting: ${post.content}`);
-    return { platformId: `li_${Date.now()}`, url: `https://linkedin.com/feed/update/${Date.now()}` };
-  },
-
-  publishToFacebook: async (post) => {
-    console.log(`[Facebook API] Posting to Page: ${post.content}`);
-    return { platformId: `fb_${Date.now()}`, url: `https://facebook.com/posts/${Date.now()}` };
-  },
-  
-  publishToTikTok: async (post) => {
-    console.log(`[TikTok API] Uploading video for: ${post.topic}`);
-    return { platformId: `tt_${Date.now()}`, url: `https://tiktok.com/@user/video/${Date.now()}` };
-  },
-
-  publishToSnapchat: async (post) => {
-    console.log(`[Snapchat API] Posting to Story: ${post.content}`);
-    return { platformId: `sc_${Date.now()}`, url: `https://snapchat.com/add/user/story/${Date.now()}` };
-  },
-
-  publishToTelegram: async (post) => {
-    const chatId = post.targetAudience; // e.g., '@mychannel' or '-100123456789'
-    console.log(`[Telegram API] Sending message to ${chatId}: ${post.content}`);
-    
-    if (bot && chatId) {
-      try {
-        const sentMessage = await bot.sendMessage(chatId, post.content);
-        return { platformId: sentMessage.message_id, url: `https://t.me/${chatId.replace('@', '')}/${sentMessage.message_id}` };
-      } catch (error) {
-        console.error('[Telegram API] Error:', error.message);
-        throw new Error(`Telegram Error: ${error.message}`);
-      }
-    } else {
-      console.log('[Telegram API] Bot token or Chat ID missing. Mocking success.');
-      return { platformId: `tg_${Date.now()}`, url: `https://t.me/mock/${Date.now()}` };
+exports.postToFacebook = async (content, accessToken, pageId) => {
+    try {
+        // Facebook Graph API to post feed
+        const url = `https://graph.facebook.com/v19.0/${pageId}/feed`;
+        const response = await axios.post(url, {
+            message: content,
+            access_token: accessToken
+        });
+        return { success: true, id: response.data.id, platform: 'Facebook' };
+    } catch (error) {
+        console.error('Facebook Post Error:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.error?.message || 'Failed to post to Facebook');
     }
-  },
-
-  publishToWhatsApp: async (post) => {
-    const groupId = post.targetAudience; // e.g., '120363025@g.us'
-    console.log(`[WhatsApp API] Sending message to Group ${groupId}: ${post.content}`);
-    
-    // NOTE: Real WhatsApp integration requires WhatsApp Business API or Twilio.
-    // Example with Twilio (commented out):
-    /*
-    const client = require('twilio')(accountSid, authToken);
-    await client.messages.create({
-      body: post.content,
-      from: 'whatsapp:+14155238886',
-      to: `whatsapp:${groupId}`
-    });
-    */
-
-    return { platformId: `wa_${Date.now()}`, url: `https://wa.me/mock/${Date.now()}` };
-  }
 };
 
-module.exports = socialService;
+exports.postToInstagram = async (content, imageUrl, accessToken, accountId) => {
+    try {
+        // Instagram Graph API: 1. Create Media Container, 2. Publish Media
+        if (!imageUrl) throw new Error('Image URL is required for Instagram');
+
+        // Step 1: Create Container
+        const containerUrl = `https://graph.facebook.com/v19.0/${accountId}/media`;
+        const containerRes = await axios.post(containerUrl, {
+            image_url: imageUrl,
+            caption: content,
+            access_token: accessToken
+        });
+        const containerId = containerRes.data.id;
+
+        // Step 2: Publish Container
+        const publishUrl = `https://graph.facebook.com/v19.0/${accountId}/media_publish`;
+        const publishRes = await axios.post(publishUrl, {
+            creation_id: containerId,
+            access_token: accessToken
+        });
+
+        return { success: true, id: publishRes.data.id, platform: 'Instagram' };
+    } catch (error) {
+        console.error('Instagram Post Error:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.error?.message || 'Failed to post to Instagram');
+    }
+};
+
+// Twitter/X posting requires OAuth 1.0a or OAuth 2.0 with signing
+// For simplicity, we'll start with just the placeholder or basic structure
+exports.postToTwitter = async (content, accessToken) => {
+    // Note: Twitter API requires complex signing (HMAC-SHA1) if using OAuth 1.0a,
+    // or Bearer Token for OAuth 2.0 (if simple).
+    // This is a simplified placeholder.
+    console.log('Posting to Twitter (Mock):', content);
+    return { success: true, id: 'mock_twitter_id', platform: 'Twitter' };
+};

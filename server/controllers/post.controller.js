@@ -38,6 +38,49 @@ exports.createPost = async (req, res) => {
       mockPosts.push(post);
     }
 
+    // Auto-publish to Social Media if status is 'published'
+    if (status === 'published' && req.user) {
+        try {
+            const User = require('../models/User');
+            const socialService = require('../services/social.service');
+            
+            // Re-fetch user to ensure we have latest connections
+            let user;
+            try {
+                user = await User.findById(req.user._id);
+            } catch (e) { console.log('User fetch failed for posting'); }
+
+            const connection = user?.connections?.find(c => c.platform.toLowerCase() === platform.toLowerCase());
+
+            if (connection && connection.apiKey) {
+                console.log(`Attempting to publish to ${platform}...`);
+                
+                if (platform.toLowerCase() === 'facebook') {
+                     await socialService.postToFacebook(content, connection.apiKey, connection.identifier);
+                     console.log('Successfully published to Facebook');
+                }
+                
+                // Update status to confirm published
+                post.status = 'published';
+                if (post.save) await post.save();
+                else {
+                    const idx = mockPosts.findIndex(p => p._id === post._id);
+                    if (idx !== -1) mockPosts[idx].status = 'published';
+                }
+            } else {
+                console.log(`Skipping publish: No ${platform} connection found with API Key.`);
+            }
+        } catch (err) {
+            console.error('Auto-posting failed:', err.message);
+            post.status = 'failed';
+            if (post.save) await post.save();
+            else {
+                const idx = mockPosts.findIndex(p => p._id === post._id);
+                if (idx !== -1) mockPosts[idx].status = 'failed';
+            }
+        }
+    }
+
     res.status(201).json({
       success: true,
       data: post,

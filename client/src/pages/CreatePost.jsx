@@ -65,9 +65,12 @@ export default function CreatePost() {
     }
   };
 
-  const handleSavePost = async () => {
+  const handleSavePost = async (statusOverride = null) => {
     if (!result) return;
     setSaving(true);
+
+    // Determine status: override -> scheduled (if time set) -> draft
+    const finalStatus = statusOverride || (scheduleTime ? 'scheduled' : 'draft');
 
     try {
       const payload = {
@@ -77,12 +80,15 @@ export default function CreatePost() {
         hashtags: result.hashtags,
         imagePrompt: result.imagePrompt,
         scheduledTime: scheduleTime ? new Date(scheduleTime) : null,
-        status: scheduleTime ? 'scheduled' : 'draft',
+        status: finalStatus,
         targetAudience: formData.targetAudience
       };
 
-      await axios.post('/api/posts', payload);
-      alert('Post saved successfully!');
+      const token = localStorage.getItem('authToken');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      await axios.post('/api/posts', payload, config);
+      alert(finalStatus === 'published' ? 'Post published successfully!' : 'Post saved successfully!');
       navigate('/calendar');
     } catch (error) {
       console.error('Error saving post:', error);
@@ -286,18 +292,31 @@ export default function CreatePost() {
               )}
 
               <div className="border-t pt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Schedule for Later (Optional)</label>
-                <div className="flex gap-4">
-                  <input 
-                    type="datetime-local" 
-                    className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={scheduleTime}
-                    onChange={(e) => setScheduleTime(e.target.value)}
-                  />
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Schedule for Later (Optional)</label>
+                    <input 
+                        type="datetime-local" 
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={scheduleTime}
+                        onChange={(e) => setScheduleTime(e.target.value)}
+                    />
+                  </div>
+
+                  {!scheduleTime && (
+                      <button 
+                        onClick={() => handleSavePost('published')}
+                        disabled={saving}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 h-[42px]"
+                      >
+                        Post Now
+                      </button>
+                  )}
+
                   <button 
-                    onClick={handleSavePost}
+                    onClick={() => handleSavePost()}
                     disabled={saving}
-                    className="px-6 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                    className="px-6 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 disabled:opacity-50 flex items-center gap-2 h-[42px]"
                   >
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
                     {scheduleTime ? 'Schedule Post' : 'Save as Draft'}
