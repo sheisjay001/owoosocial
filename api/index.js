@@ -30,7 +30,11 @@ module.exports = async (req, res) => {
     */
 
     // Ensure database is connected before handling the request
-    await connectDB();
+    try {
+      await connectDB();
+    } catch (dbErr) {
+      console.error('DB Connection Failed (Vercel Wrapper):', dbErr.message);
+    }
     
     // Allow the Express app to handle the request
     console.log('[Vercel] Passing to Express app...');

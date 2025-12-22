@@ -103,6 +103,17 @@ app.use('*', (req, res) => {
   });
 });
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('[Express Error]', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal Server Error (Express Caught)',
+    error: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
+
 app.get('/', (req, res) => {
   res.send('OWOO Social AI Server is running');
 });
