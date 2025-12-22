@@ -71,7 +71,8 @@ try {
 
   runCommand('npm run build', clientDir);
 
-  // 2. Copy Client Build to Root
+  // 2. Copy Client Build to Root - SKIPPED for Vercel Output Directory
+  /*
   console.log('--- Copying Client Build to Root ---');
   if (fs.existsSync(clientDistDir)) {
     const distFiles = fs.readdirSync(clientDistDir);
@@ -93,6 +94,7 @@ try {
   } else {
     throw new Error('Client dist directory not found! Build failed?');
   }
+  */
 
   // 3. Install Server Dependencies
   console.log('--- Installing Server Dependencies ---');

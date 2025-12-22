@@ -1,8 +1,9 @@
 {
   "version": 2,
-  "outputDirectory": ".",
+  "outputDirectory": "client/dist",
   "functions": {
     "api/index.js": {
+      "runtime": "nodejs20.x",
       "maxDuration": 10,
       "includeFiles": "server/**"
     }
@@ -13,7 +14,7 @@
       "destination": "/api/index.js"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
