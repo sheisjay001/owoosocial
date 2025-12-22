@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const connectDB = require('./config/db');
 
 dotenv.config();
 
@@ -14,9 +15,8 @@ const domainRoutes = require('./routes/domain.routes');
 const authRoutes = require('./routes/auth.routes');
 const communityRoutes = require('./routes/community.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
-const statusRoutes = require('./routes/status.routes');
-const connectDB = require('./config/db');
 const initScheduler = require('./services/scheduler.service');
+const statusRoutes = require('./routes/status.routes');
 
 // Connect to Database
 connectDB();
