@@ -9,7 +9,7 @@ const systemGroq = new Groq({
 
 // Helper: Get best available AI client
 const getAIClient = async (userId) => {
-    let client = { type: 'groq', instance: systemGroq, model: 'llama3-8b-8192' };
+    let client = { type: 'groq', instance: systemGroq, model: 'llama-3.3-70b-versatile' };
     
     // Check if system key is valid
     const apiKey = process.env.GROQ_API_KEY;
@@ -247,6 +247,8 @@ exports.generateCarouselIdeas = async (req, res) => {
 // 7. Multilingual Support
 exports.translateCaption = async (req, res) => {
     const { caption, language } = req.body;
+    console.log(`Translating to ${language}:`, caption.substring(0, 50) + '...');
+    
     try {
         const { type, instance, model } = await getAIClient(req.user?.id);
 
@@ -254,14 +256,18 @@ exports.translateCaption = async (req, res) => {
         if (type === 'mock') return res.json({ success: true, data: mockData });
 
         const prompt = `
-            Translate this social media caption into ${language}.
-            Maintain the tone and emoji usage.
+            Task: Translate the following social media caption into ${language}.
             
-            Caption: "${caption}"
+            Rules:
+            1. ONLY translate to ${language}. Do not output English unless ${language} is English.
+            2. Maintain the original tone and emojis.
+            3. Return strictly valid JSON.
             
-            Output JSON:
+            Caption to translate: "${caption}"
+            
+            Output JSON format:
             {
-                "translated": "..."
+                "translated": "THE_TRANSLATED_TEXT_HERE"
             }
         `;
 
