@@ -89,8 +89,11 @@ exports.login = async (req, res) => {
         isMatch = await user.matchPassword(password);
       }
     } catch (dbError) {
-      console.log('DB Error (Login), using mock:', dbError.message);
-      // Fallback to mock
+      console.log('DB Error (Login), checking mock:', dbError.message);
+    }
+
+    // Fallback to mock if user not found in DB or DB error occurred
+    if (!user) {
       user = mockUsers.find(u => u.email === email);
       if (user) {
         // Simple check for mock
