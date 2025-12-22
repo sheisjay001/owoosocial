@@ -5,7 +5,7 @@ try {
   console.error('CRITICAL: Failed to load server/index.js', err);
   const express = require('express');
   app = express();
-  app.all('*', (req, res) => {
+  app.use((req, res) => {
     res.status(500).json({
       success: false,
       message: 'Critical Server Initialization Error',

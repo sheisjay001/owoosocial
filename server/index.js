@@ -30,7 +30,7 @@ app.use(cors({
 }));
 
 // Handle preflight requests explicitly
-app.options('*', cors());
+app.options(cors()); // Enable CORS preflight for all routes
 
 app.use(express.json());
 
@@ -87,7 +87,7 @@ routes.forEach(({ path, route }) => {
 });
 
 // DEBUG: Catch-all 404 handler to inspect the path
-app.use('*', (req, res) => {
+app.use((req, res) => {
   const debugInfo = {
     path: req.path,
     originalUrl: req.originalUrl,
