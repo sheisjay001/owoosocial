@@ -48,10 +48,12 @@ app.post('/api/test-post', (req, res) => {
 });
 
 // DEBUG: Explicit registration route override (to test user suggestion)
-app.post('/api/auth/register-debug', (req, res) => {
+const debugRegisterHandler = (req, res) => {
   console.log('DEBUG REGISTER HIT:', req.body);
   res.status(200).json({ success: true, message: 'Debug Register Works' });
-});
+};
+app.post('/api/auth/register-debug', debugRegisterHandler);
+app.post('/auth/register-debug', debugRegisterHandler);
 
 // Routes - Mount on both /api and root to handle Vercel rewrites robustly
 const routes = [

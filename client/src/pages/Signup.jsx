@@ -17,18 +17,15 @@ export default function Signup() {
     setError('');
 
     try {
-      // DEBUG: Using register-debug endpoint to bypass auth controller logic for testing
-      const { data } = await axios.post('/api/auth/register-debug', {
+      const { data } = await axios.post('/api/auth/register', {
         name,
         email,
         password,
       });
 
       if (data.success) {
-        // For debug mode, we might not get a token, but let's assume success redirects
-        // localStorage.setItem('authToken', data.token);
-        // localStorage.setItem('user', JSON.stringify(data.user));
-        alert('Debug Registration Successful! Backend is reachable.'); 
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
         navigate('/');
       }
     } catch (err) {
