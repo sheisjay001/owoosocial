@@ -34,16 +34,24 @@ app.options('*', cors());
 
 app.use(express.json());
 
-app.use('/api/ai', aiRoutes);
-app.use('/api/posts', postRoutes);
-app.use('/api/newsletters', newsletterRoutes);
-app.use('/api/podcasts', podcastRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/domains', domainRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/community', communityRoutes);
-app.use('/api/status', statusRoutes);
+// Routes - Mount on both /api and root to handle Vercel rewrites robustly
+const routes = [
+  { path: '/ai', route: aiRoutes },
+  { path: '/posts', route: postRoutes },
+  { path: '/newsletters', route: newsletterRoutes },
+  { path: '/podcasts', route: podcastRoutes },
+  { path: '/reports', route: reportRoutes },
+  { path: '/payments', route: paymentRoutes },
+  { path: '/domains', route: domainRoutes },
+  { path: '/auth', route: authRoutes },
+  { path: '/community', route: communityRoutes },
+  { path: '/status', route: statusRoutes },
+];
+
+routes.forEach(({ path, route }) => {
+  app.use(`/api${path}`, route);
+  app.use(path, route); // Fallback if /api is stripped
+});
 
 app.get('/', (req, res) => {
   res.send('OWOO Social AI Server is running');
