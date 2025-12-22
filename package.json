@@ -6,7 +6,7 @@
     "server-install": "cd server && npm install",
     "build-client": "cd client && npm run build",
     "build": "node build-deploy.js",
-    "vercel-build": "node build-deploy.js",
+    "vercel-build": "cd client && npm install --legacy-peer-deps && npm run build && cd .. && mkdir -p public && cp -r client/dist/* public/",
     "start": "node server/index.js"
   },
   "engines": {
