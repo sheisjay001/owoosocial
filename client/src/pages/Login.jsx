@@ -47,12 +47,6 @@ export default function Login() {
           </div>
         )}
 
-        <div className="mb-4 bg-blue-50 p-4 rounded-md text-sm text-blue-800">
-          <p className="font-semibold">Demo Credentials:</p>
-          <p>Email: admin@owoo.com</p>
-          <p>Password: password123</p>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

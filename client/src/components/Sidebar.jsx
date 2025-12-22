@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, Layers, BarChart, Settings, PlusCircle, PenTool, Mail, Mic, FileText, CreditCard, LogOut, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Calendar, Layers, BarChart, Settings, PlusCircle, PenTool, Mail, Mic, FileText, CreditCard, LogOut, MessageSquare, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
 
@@ -16,7 +16,7 @@ const sidebarItems = [
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -28,10 +28,18 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-white border-r h-screen flex flex-col">
-      <div className="p-6 border-b">
-        <h1 className="text-2xl font-bold text-blue-600">OWOO</h1>
-        <p className="text-xs text-gray-500">Social AI Scheduler</p>
+    <div className={cn(
+      "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r flex flex-col transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen",
+      isOpen ? "translate-x-0" : "-translate-x-full"
+    )}>
+      <div className="p-6 border-b flex justify-between items-center">
+        <div>
+           <h1 className="text-2xl font-bold text-blue-600">OWOO</h1>
+           <p className="text-xs text-gray-500">Social AI Scheduler</p>
+        </div>
+        <button onClick={onClose} className="md:hidden text-gray-500 hover:text-gray-700">
+            <X className="w-5 h-5" />
+        </button>
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -43,6 +51,7 @@ export default function Sidebar() {
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => onClose && onClose()} // Close sidebar on navigation (mobile)
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                 isActive 
@@ -60,6 +69,7 @@ export default function Sidebar() {
       <div className="p-4 border-t space-y-2">
         <Link 
           to="/brands/new"
+          onClick={() => onClose && onClose()}
           className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
         >
           <PlusCircle className="w-4 h-4" />

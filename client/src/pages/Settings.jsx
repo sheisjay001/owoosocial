@@ -212,9 +212,24 @@ export default function Settings() {
                 <p className="text-sm text-gray-500">Post photos, reels, and stories.</p>
               </div>
             </div>
-            <button className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium">
-              Coming Soon
-            </button>
+            {isConnected('Instagram') ? (
+                <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
+                    <button 
+                        onClick={() => handleDelete('Instagram', isConnected('Instagram').identifier)}
+                        className="text-gray-400 hover:text-red-600"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={() => handleConnect('Instagram')}
+                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
+                >
+                    Connect
+                </button>
+            )}
           </div>
 
           {/* Facebook */}
@@ -228,9 +243,24 @@ export default function Settings() {
                 <p className="text-sm text-gray-500">Share posts to Pages and Groups.</p>
               </div>
             </div>
-            <button className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium">
-              Coming Soon
-            </button>
+            {isConnected('Facebook') ? (
+                <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
+                    <button 
+                        onClick={() => handleDelete('Facebook', isConnected('Facebook').identifier)}
+                        className="text-gray-400 hover:text-red-600"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={() => handleConnect('Facebook')}
+                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
+                >
+                    Connect
+                </button>
+            )}
           </div>
 
           {/* Twitter / X */}
@@ -244,9 +274,24 @@ export default function Settings() {
                 <p className="text-sm text-gray-500">Post tweets and threads.</p>
               </div>
             </div>
-            <button className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium">
-              Coming Soon
-            </button>
+            {isConnected('Twitter') ? (
+                <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
+                    <button 
+                        onClick={() => handleDelete('Twitter', isConnected('Twitter').identifier)}
+                        className="text-gray-400 hover:text-red-600"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={() => handleConnect('Twitter')}
+                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
+                >
+                    Connect
+                </button>
+            )}
           </div>
 
           {/* LinkedIn */}
@@ -260,9 +305,24 @@ export default function Settings() {
                 <p className="text-sm text-gray-500">Share professional updates and articles.</p>
               </div>
             </div>
-            <button className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium">
-              Coming Soon
-            </button>
+            {isConnected('LinkedIn') ? (
+                <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
+                    <button 
+                        onClick={() => handleDelete('LinkedIn', isConnected('LinkedIn').identifier)}
+                        className="text-gray-400 hover:text-red-600"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={() => handleConnect('LinkedIn')}
+                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
+                >
+                    Connect
+                </button>
+            )}
           </div>
 
           {/* TikTok */}
@@ -276,9 +336,24 @@ export default function Settings() {
                 <p className="text-sm text-gray-500">Upload short-form videos.</p>
               </div>
             </div>
-            <button className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium">
-              Coming Soon
-            </button>
+            {isConnected('TikTok') ? (
+                <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
+                    <button 
+                        onClick={() => handleDelete('TikTok', isConnected('TikTok').identifier)}
+                        className="text-gray-400 hover:text-red-600"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={() => handleConnect('TikTok')}
+                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
+                >
+                    Connect
+                </button>
+            )}
           </div>
 
           {/* Snapchat */}
@@ -292,9 +367,24 @@ export default function Settings() {
                 <p className="text-sm text-gray-500">Share stories and snaps.</p>
               </div>
             </div>
-            <button className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium">
-              Coming Soon
-            </button>
+            {isConnected('Snapchat') ? (
+                <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-100 rounded-full">Connected</span>
+                    <button 
+                        onClick={() => handleDelete('Snapchat', isConnected('Snapchat').identifier)}
+                        className="text-gray-400 hover:text-red-600"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={() => handleConnect('Snapchat')}
+                    className="px-4 py-2 bg-white text-gray-700 border hover:bg-gray-50 rounded-md text-sm font-medium"
+                >
+                    Connect
+                </button>
+            )}
           </div>
         </div>
       </div>
