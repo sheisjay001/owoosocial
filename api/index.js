@@ -7,7 +7,12 @@ module.exports = async (req, res) => {
     // Check environment variables
     if (!process.env.MONGO_URI) {
       console.error('MONGO_URI is missing!');
-      // We don't exit, but we log it. The db connection will likely fail.
+    }
+
+    // Handle OPTIONS request (CORS Preflight) directly
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
     }
 
     // Ensure database is connected before handling the request
