@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, Layers, BarChart, Settings, PlusCircle, PenTool, Mail, Mic, FileText, CreditCard, LogOut, MessageSquare, X, Sparkles, Users } from 'lucide-react';
+import { LayoutDashboard, Calendar, Layers, BarChart, Settings, PlusCircle, PenTool, Mail, Mic, FileText, CreditCard, LogOut, MessageSquare, X, Sparkles, Users, Phone } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
 
@@ -9,6 +9,7 @@ const sidebarItems = [
   { icon: MessageSquare, label: 'Inbox', path: '/inbox' },
   { icon: Mail, label: 'Newsletters', path: '/newsletters' },
   { icon: Users, label: 'Subscribers', path: '/subscribers' },
+  { icon: Phone, label: 'WhatsApp', path: '/whatsapp' },
   { icon: Mic, label: 'Podcasts', path: '/podcasts' },
   { icon: Calendar, label: 'Calendar', path: '/calendar' },
   { icon: Layers, label: 'Brands', path: '/brands' },

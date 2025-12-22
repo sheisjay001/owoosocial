@@ -12,6 +12,7 @@ import Settings from './pages/Settings';
 import Domains from './pages/Domains';
 import Newsletters from './pages/Newsletters';
 import Subscribers from './pages/Subscribers';
+import WhatsApp from './pages/WhatsApp';
 import Podcasts from './pages/Podcasts';
 import Reports from './pages/Reports';
 import Billing from './pages/Billing';
@@ -54,6 +55,7 @@ function App() {
             <Route path="calendar" element={<Calendar />} />
             <Route path="newsletters" element={<Newsletters />} />
             <Route path="subscribers" element={<Subscribers />} />
+            <Route path="whatsapp" element={<WhatsApp />} />
             <Route path="podcasts" element={<Podcasts />} />
             <Route path="reports" element={<Reports />} />
             <Route path="billing" element={<Billing />} />

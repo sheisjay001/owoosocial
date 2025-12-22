@@ -21,6 +21,7 @@ const leadRoutes = require('./routes/lead.routes');
 const subscriberRoutes = require('./routes/subscriber.routes');
 // const initScheduler = require('./services/scheduler.service'); // Moved to conditional import
 const statusRoutes = require('./routes/status.routes');
+const whatsappRoutes = require('./routes/whatsapp.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -86,6 +87,7 @@ const routes = [
   { path: '/oauth', route: oauthRoutes },
   { path: '/leads', route: leadRoutes },
   { path: '/subscribers', route: subscriberRoutes },
+  { path: '/whatsapp', route: whatsappRoutes },
   { path: '/status', route: statusRoutes },
 ];
 

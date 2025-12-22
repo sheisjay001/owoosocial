@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const Post = require('../models/Post');
 const Newsletter = require('../models/Newsletter');
 const Podcast = require('../models/Podcast');
+const Broadcast = require('../models/Broadcast');
+const User = require('../models/User');
 const socialService = require('./social.service');
 const emailService = require('./email.service');
 const podcastService = require('./podcast.service');
@@ -54,6 +56,112 @@ const initScheduler = () => {
       }
     } catch (error) {
       console.error('Scheduler Error (Podcasts):', error);
+    }
+
+    // --- Process Broadcasts ---
+    try {
+        const broadcasts = await Broadcast.find({
+            $or: [
+                { status: 'processing' },
+                { status: 'scheduled', scheduledTime: { $lte: now } }
+            ]
+        }).populate('user').populate('recipients.contact');
+
+        if (broadcasts.length > 0) {
+            console.log(`Found ${broadcasts.length} broadcasts to process.`);
+
+            for (const broadcast of broadcasts) {
+                try {
+                    // Initialize if just starting
+                    if (broadcast.status === 'scheduled') {
+                        broadcast.status = 'processing';
+                        // nextBatchTime defaults to scheduledTime or now, so we can proceed
+                        if (!broadcast.nextBatchTime) broadcast.nextBatchTime = now;
+                    }
+
+                    // Check if it's time for the next batch
+                    if (broadcast.nextBatchTime > now) {
+                        continue; // Wait for the window
+                    }
+
+                    // Get WhatsApp Credentials
+                    const waConnection = broadcast.user.connections.find(c => c.platform === 'WhatsApp');
+                    if (!waConnection || !waConnection.accessToken || !waConnection.platformId) {
+                        console.error(`[Broadcast] Missing WhatsApp credentials for user ${broadcast.user._id}`);
+                        broadcast.status = 'failed'; // Or paused?
+                        await broadcast.save();
+                        continue;
+                    }
+
+                    // Get Pending Recipients
+                    // We filter in memory because 'recipients' is an array of subdocuments
+                    const pendingRecipients = broadcast.recipients.filter(r => r.status === 'pending');
+
+                    if (pendingRecipients.length === 0) {
+                        broadcast.status = 'completed';
+                        await broadcast.save();
+                        continue;
+                    }
+
+                    // Take the batch
+                    const batch = pendingRecipients.slice(0, broadcast.batchSize);
+                    console.log(`[Broadcast ${broadcast._id}] Processing batch of ${batch.length} recipients.`);
+
+                    let batchSuccess = 0;
+                    let batchFail = 0;
+
+                    for (const recipient of batch) {
+                        if (!recipient.contact || !recipient.contact.phoneNumber) {
+                             recipient.status = 'failed';
+                             recipient.error = 'Invalid contact';
+                             batchFail++;
+                             continue;
+                        }
+
+                        try {
+                            await socialService.postToWhatsApp(
+                                broadcast.message,
+                                waConnection.accessToken,
+                                waConnection.platformId,
+                                recipient.contact.phoneNumber
+                            );
+                            recipient.status = 'sent';
+                            recipient.sentAt = new Date();
+                            batchSuccess++;
+                        } catch (err) {
+                            console.error(`[Broadcast] Failed to send to ${recipient.contact.phoneNumber}:`, err.message);
+                            recipient.status = 'failed';
+                            recipient.error = err.message;
+                            batchFail++;
+                        }
+                    }
+
+                    // Update Broadcast Stats
+                    broadcast.processedCount += batch.length;
+                    broadcast.successCount += batchSuccess;
+                    broadcast.failCount += batchFail;
+
+                    // Schedule next batch
+                    const nextTime = new Date();
+                    nextTime.setMinutes(nextTime.getMinutes() + broadcast.batchIntervalMinutes);
+                    broadcast.nextBatchTime = nextTime;
+
+                    // Check if complete
+                    const remaining = broadcast.recipients.filter(r => r.status === 'pending').length;
+                    if (remaining === 0) {
+                        broadcast.status = 'completed';
+                    }
+
+                    await broadcast.save();
+                    console.log(`[Broadcast ${broadcast._id}] Batch processed. Success: ${batchSuccess}, Failed: ${batchFail}. Next batch at ${nextTime}`);
+
+                } catch (err) {
+                    console.error(`[Broadcast] Error processing broadcast ${broadcast._id}:`, err);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Scheduler Error (Broadcasts):', error);
     }
 
     // --- Process Posts ---
