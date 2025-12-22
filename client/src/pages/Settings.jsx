@@ -504,6 +504,32 @@ export default function Settings() {
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-bold mb-4">Connect {modalPlatform}</h3>
             
+            {(modalPlatform === 'Facebook' || modalPlatform === 'Instagram' || modalPlatform === 'Twitter' || modalPlatform === 'LinkedIn') ? (
+               <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-md text-sm text-blue-800">
+                    <p className="font-medium">Connect your {modalPlatform} account securely.</p>
+                    <p className="mt-1">You will be redirected to {modalPlatform} to authorize this app.</p>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                        const token = localStorage.getItem('authToken');
+                        window.location.href = `/api/oauth/${modalPlatform.toLowerCase()}/login?token=${token}`;
+                    }}
+                    className="w-full py-3 px-4 bg-blue-600 text-white rounded-md font-bold hover:bg-blue-700 flex items-center justify-center gap-2"
+                  >
+                    Connect with {modalPlatform}
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="w-full py-2 px-4 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+               </div>
+            ) : (
+             <>
             <div className="bg-blue-50 p-4 rounded-md mb-4 text-sm text-blue-800">
                 <h4 className="font-semibold mb-1">How to Connect:</h4>
                 {modalPlatform === 'Telegram' ? (
@@ -572,7 +598,7 @@ export default function Settings() {
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={
                       modalPlatform === 'WhatsApp' ? 'e.g. 120363025@g.us' : 
-                      modalPlatform === 'Telegram' ? 'e.g. @mychannel' :
+                      modalPlatform === 'Telegram' ? 'e.g. @mychannel' : 
                       'e.g. mypage_123'
                   }
                   value={formData.identifier}
@@ -614,6 +640,8 @@ export default function Settings() {
                 </button>
               </div>
             </form>
+            </>
+            )}
           </div>
         </div>
       )}

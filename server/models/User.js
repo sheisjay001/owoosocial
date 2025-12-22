@@ -34,10 +34,14 @@ const userSchema = new mongoose.Schema({
   },
   connections: [
     {
-      platform: String, // 'whatsapp', 'telegram', etc.
-      identifier: String, // Group ID, Chat ID
-      name: String, // 'My Channel'
-      apiKey: String, // API Key or Access Token
+      platform: String, // 'facebook', 'instagram', 'twitter', 'linkedin'
+      platformId: String, // The user's ID on that platform (e.g., Facebook Page ID)
+      name: String, // 'My Facebook Page'
+      accessToken: String, // OAuth Access Token
+      refreshToken: String, // OAuth Refresh Token (if applicable)
+      tokenExpiry: Date, // When the token expires
+      identifier: String, // Legacy: Group ID, Chat ID (keep for backward compatibility)
+      apiKey: String, // Legacy: Manual API Key (keep for backward compatibility)
       connectedAt: { type: Date, default: Date.now }
     }
   ]
