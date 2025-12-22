@@ -18,6 +18,7 @@ const analyticsRoutes = require('./routes/analytics.routes');
 const brandRoutes = require('./routes/brand.routes');
 const oauthRoutes = require('./routes/oauth.routes');
 const leadRoutes = require('./routes/lead.routes');
+const subscriberRoutes = require('./routes/subscriber.routes');
 // const initScheduler = require('./services/scheduler.service'); // Moved to conditional import
 const statusRoutes = require('./routes/status.routes');
 

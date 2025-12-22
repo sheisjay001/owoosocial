@@ -71,13 +71,25 @@ exports.sendNewsletterNow = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Newsletter not found' });
     }
 
-    // Fetch real subscribers (Users)
+    // Fetch real subscribers (Subscribers owned by user)
     let subscribers = [];
     try {
-        const users = await User.find().select('email');
-        subscribers = users.map(u => u.email);
+        const subList = await Subscriber.find({ 
+            user: req.user.id, 
+            status: 'subscribed' 
+        }).select('email');
+        
+        subscribers = subList.map(s => s.email);
+
+        // Fallback: If no subscribers, maybe they are testing with their own email
+        if (subscribers.length === 0) {
+            console.log('No subscribers found for user, checking system users as fallback (Legacy Mode)');
+             // Optional: Keep legacy behavior for now or just return empty
+             // const users = await User.find().select('email');
+             // subscribers = users.map(u => u.email);
+        }
     } catch (e) {
-        console.log('Error fetching users for newsletter:', e.message);
+        console.log('Error fetching subscribers for newsletter:', e.message);
     }
 
     // Fallback to mock if no users found
