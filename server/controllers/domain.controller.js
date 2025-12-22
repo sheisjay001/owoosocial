@@ -14,11 +14,11 @@ exports.addDomain = async (req, res) => {
     });
     if (existing) return res.status(400).json({ error: 'Domain already added' });
 
-    // Get sender with API keys
+    // Get sender
     let sender = {};
     try {
         if (req.user && req.user.id) {
-             sender = await User.findById(req.user.id).select('+apiKeys');
+             sender = await User.findById(req.user.id);
         }
     } catch (e) {
         console.log('Error fetching sender:', e.message);

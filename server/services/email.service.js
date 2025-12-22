@@ -9,18 +9,8 @@ let systemProvider = 'mock';
 if (systemResendKey && systemResendKey.startsWith('re_')) systemProvider = 'resend';
 else if (systemSendGridKey && systemSendGridKey.startsWith('SG.')) systemProvider = 'sendgrid';
 
-const getProvider = (userKeys) => {
-    // 1. User Keys
-    if (userKeys?.resend && userKeys.resend.startsWith('re_')) {
-        return { type: 'resend', client: new Resend(userKeys.resend) };
-    }
-    if (userKeys?.sendgrid && userKeys.sendgrid.startsWith('SG.')) {
-        const sg = new MailService();
-        sg.setApiKey(userKeys.sendgrid);
-        return { type: 'sendgrid', client: sg };
-    }
-    
-    // 2. System Fallback
+const getProvider = () => {
+    // Only use System Fallback
     if (systemProvider === 'resend') return { type: 'resend', client: new Resend(systemResendKey) };
     if (systemProvider === 'sendgrid') {
         const sg = new MailService();
@@ -33,7 +23,7 @@ const getProvider = (userKeys) => {
 
 const emailService = {
   sendEmail: async (to, subject, htmlContent, sender = {}) => {
-    const { type, client } = getProvider(sender.apiKeys);
+    const { type, client } = getProvider();
 
     if (type === 'mock') {
       console.log(`[Mock Email Service] Sending to: ${to}`);
@@ -86,7 +76,7 @@ const emailService = {
   },
 
   sendNewsletter: async (newsletter, subscribers, sender = {}) => {
-    const { type, client } = getProvider(sender.apiKeys);
+    const { type, client } = getProvider();
 
     console.log(`[Newsletter Service] Starting broadcast for "${newsletter.subject}"`);
     console.log(`[Newsletter Service] Sender: ${sender.name} (${sender.email})`);
@@ -136,8 +126,8 @@ const emailService = {
     return { campaignId: `camp_${Date.now()}`, sentCount };
   },
 
-  addDomain: async (domainName, sender = {}) => {
-    const { type, client } = getProvider(sender.apiKeys);
+  addDomain: async (domainName) => {
+    const { type, client } = getProvider();
 
     if (type !== 'resend') {
       console.log(`[Email Service] Domain management is currently optimized for Resend. Mocking for ${type}.`);
@@ -162,8 +152,8 @@ const emailService = {
     }
   },
 
-  getDomain: async (domainId, sender = {}) => {
-    const { type, client } = getProvider(sender.apiKeys);
+  getDomain: async (domainId) => {
+    const { type, client } = getProvider();
 
     if (type !== 'resend') {
       return { id: domainId, status: 'verified', records: [] };
@@ -178,8 +168,8 @@ const emailService = {
     }
   },
 
-  verifyDomain: async (domainId, sender = {}) => {
-    const { type, client } = getProvider(sender.apiKeys);
+  verifyDomain: async (domainId) => {
+    const { type, client } = getProvider();
     
     if (type !== 'resend') {
       return { id: domainId, status: 'verified' };

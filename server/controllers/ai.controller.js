@@ -11,21 +11,6 @@ const systemGroq = new Groq({
 const getAIClient = async (userId) => {
     let client = { type: 'groq', instance: systemGroq, model: 'llama3-8b-8192' };
     
-    if (userId) {
-        try {
-            const user = await User.findById(userId).select('+apiKeys');
-            if (user?.apiKeys?.openai && user.apiKeys.openai.startsWith('sk-')) {
-                return { 
-                    type: 'openai', 
-                    instance: new OpenAI({ apiKey: user.apiKeys.openai }),
-                    model: 'gpt-4o' // Default to 4o for best performance/vision
-                };
-            }
-        } catch (e) {
-            console.log('Error fetching user keys for AI:', e.message);
-        }
-    }
-    
     // Check if system key is valid
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey || apiKey === 'mock-key' || !apiKey.startsWith('gsk_')) {
@@ -37,8 +22,8 @@ const getAIClient = async (userId) => {
 
 // 1. Core Content Generator (Enhanced)
 exports.generateContent = async (req, res) => {
+  const { topic, platform, tone, brandDescription } = req.body;
   try {
-    const { topic, platform, tone, brandDescription } = req.body;
     const { type, instance, model } = await getAIClient(req.user?.id);
 
     if (type === 'mock') return res.json({ success: true, data: getMockResponse(topic, tone) });
@@ -56,8 +41,13 @@ exports.generateContent = async (req, res) => {
       }
     `;
 
-    const response = await generateText(type, instance, model, prompt);
-    res.json({ success: true, data: response });
+    try {
+        const response = await generateText(type, instance, model, prompt);
+        res.json({ success: true, data: response });
+    } catch (apiError) {
+        console.error('AI API Error (Falling back to mock):', apiError.message);
+        res.json({ success: true, data: getMockResponse(topic, tone), note: "Mock data (API Error)" });
+    }
   } catch (error) {
     handleError(res, error);
   }
@@ -65,11 +55,12 @@ exports.generateContent = async (req, res) => {
 
 // 2. Caption Generator (Multiple Styles)
 exports.generateCaptionVariations = async (req, res) => {
+    const { topic, platform, brandDescription } = req.body;
     try {
-        const { topic, platform, brandDescription } = req.body;
         const { type, instance, model } = await getAIClient(req.user?.id);
 
-        if (type === 'mock') return res.json({ success: true, data: { funny: "Mock Funny", professional: "Mock Pro", trendy: "Mock Trendy" } });
+        const mockData = { funny: "Mock Funny Caption for " + topic, professional: "Mock Pro Caption", trendy: "Mock Trendy Caption" };
+        if (type === 'mock') return res.json({ success: true, data: mockData });
 
         const prompt = `
             Generate 3 distinct caption variations for a ${platform} post about "${topic}".
@@ -87,8 +78,13 @@ exports.generateCaptionVariations = async (req, res) => {
             }
         `;
 
-        const response = await generateText(type, instance, model, prompt);
-        res.json({ success: true, data: response });
+        try {
+            const response = await generateText(type, instance, model, prompt);
+            res.json({ success: true, data: response });
+        } catch (apiError) {
+            console.error('AI API Error (Falling back to mock):', apiError.message);
+            res.json({ success: true, data: mockData, note: "Mock data (API Error)" });
+        }
     } catch (error) {
         handleError(res, error);
     }
@@ -96,9 +92,12 @@ exports.generateCaptionVariations = async (req, res) => {
 
 // 3. Hashtag Recommender
 exports.generateHashtags = async (req, res) => {
+    const { topic, niche } = req.body;
     try {
-        const { topic, niche } = req.body;
         const { type, instance, model } = await getAIClient(req.user?.id);
+
+        const mockData = { hashtags: ['#mock1', '#mock2', '#' + (topic || 'topic').replace(/\s+/g, '')] };
+        if (type === 'mock') return res.json({ success: true, data: mockData });
 
         const prompt = `
             Suggest 30 relevant, high-reach hashtags for:
@@ -111,10 +110,13 @@ exports.generateHashtags = async (req, res) => {
             }
         `;
 
-        if (type === 'mock') return res.json({ success: true, data: { hashtags: ['#mock1', '#mock2'] } });
-
-        const response = await generateText(type, instance, model, prompt);
-        res.json({ success: true, data: response });
+        try {
+            const response = await generateText(type, instance, model, prompt);
+            res.json({ success: true, data: response });
+        } catch (apiError) {
+            console.error('AI API Error (Falling back to mock):', apiError.message);
+            res.json({ success: true, data: mockData, note: "Mock data (API Error)" });
+        }
     } catch (error) {
         handleError(res, error);
     }
@@ -122,9 +124,18 @@ exports.generateHashtags = async (req, res) => {
 
 // 4. Content Calendar Assistant
 exports.generateCalendar = async (req, res) => {
+    const { timeframe, goals, brandDescription } = req.body; // timeframe: 'weekly' or 'monthly'
     try {
-        const { timeframe, goals, brandDescription } = req.body; // timeframe: 'weekly' or 'monthly'
         const { type, instance, model } = await getAIClient(req.user?.id);
+
+        const mockData = { 
+            calendar: [
+                { day: "Monday", topic: "Motivation", format: "Post", caption_idea: "Start the week right!" },
+                { day: "Wednesday", topic: "Product", format: "Reel", caption_idea: "Check this out" },
+                { day: "Friday", topic: "Fun", format: "Story", caption_idea: "Weekend vibes" }
+            ] 
+        };
+        if (type === 'mock') return res.json({ success: true, data: mockData });
 
         const prompt = `
             Create a ${timeframe || 'weekly'} social media content calendar.
@@ -140,10 +151,13 @@ exports.generateCalendar = async (req, res) => {
             }
         `;
 
-        if (type === 'mock') return res.json({ success: true, data: { calendar: [] } });
-
-        const response = await generateText(type, instance, model, prompt);
-        res.json({ success: true, data: response });
+        try {
+            const response = await generateText(type, instance, model, prompt);
+            res.json({ success: true, data: response });
+        } catch (apiError) {
+             console.error('AI API Error (Falling back to mock):', apiError.message);
+             res.json({ success: true, data: mockData, note: "Mock data (API Error)" });
+        }
     } catch (error) {
         handleError(res, error);
     }
@@ -151,9 +165,16 @@ exports.generateCalendar = async (req, res) => {
 
 // 5. Post Rewriter/Optimizer
 exports.rewritePost = async (req, res) => {
+    const { draft, goal } = req.body;
     try {
-        const { draft, goal } = req.body;
         const { type, instance, model } = await getAIClient(req.user?.id);
+
+        const mockData = { 
+            original: draft, 
+            optimized: draft + " (Optimized by AI)", 
+            improvements: ["Improved clarity", "Added keywords"] 
+        };
+        if (type === 'mock') return res.json({ success: true, data: mockData });
 
         const prompt = `
             Rewrite and optimize this social media draft for better ${goal || 'engagement'}:
@@ -168,10 +189,13 @@ exports.rewritePost = async (req, res) => {
             }
         `;
 
-        if (type === 'mock') return res.json({ success: true, data: { optimized: draft + " (Optimized)" } });
-
-        const response = await generateText(type, instance, model, prompt);
-        res.json({ success: true, data: response });
+        try {
+            const response = await generateText(type, instance, model, prompt);
+            res.json({ success: true, data: response });
+        } catch (apiError) {
+            console.error('AI API Error (Falling back to mock):', apiError.message);
+            res.json({ success: true, data: mockData, note: "Mock data (API Error)" });
+        }
     } catch (error) {
         handleError(res, error);
     }
@@ -179,9 +203,21 @@ exports.rewritePost = async (req, res) => {
 
 // 6. Carousel/Story Ideas
 exports.generateCarouselIdeas = async (req, res) => {
+    const { topic } = req.body;
     try {
-        const { topic } = req.body;
         const { type, instance, model } = await getAIClient(req.user?.id);
+
+        const mockData = {
+            title: "5 Tips for " + topic,
+            slides: [
+                { slide: 1, content: "Intro to " + topic },
+                { slide: 2, content: "Tip 1: Key insight" },
+                { slide: 3, content: "Tip 2: Actionable advice" },
+                { slide: 4, content: "Tip 3: Common mistake" },
+                { slide: 5, content: "Conclusion & Call to Action" }
+            ]
+        };
+        if (type === 'mock') return res.json({ success: true, data: mockData });
 
         const prompt = `
             Create a 5-7 slide educational carousel outline about "${topic}".
@@ -196,10 +232,13 @@ exports.generateCarouselIdeas = async (req, res) => {
             }
         `;
 
-        if (type === 'mock') return res.json({ success: true, data: { slides: [] } });
-
-        const response = await generateText(type, instance, model, prompt);
-        res.json({ success: true, data: response });
+        try {
+            const response = await generateText(type, instance, model, prompt);
+            res.json({ success: true, data: response });
+        } catch (apiError) {
+            console.error('AI API Error (Falling back to mock):', apiError.message);
+            res.json({ success: true, data: mockData, note: "Mock data (API Error)" });
+        }
     } catch (error) {
         handleError(res, error);
     }
@@ -207,9 +246,12 @@ exports.generateCarouselIdeas = async (req, res) => {
 
 // 7. Multilingual Support
 exports.translateCaption = async (req, res) => {
+    const { caption, language } = req.body;
     try {
-        const { caption, language } = req.body;
         const { type, instance, model } = await getAIClient(req.user?.id);
+
+        const mockData = { translated: `[Translated to ${language}] ` + caption };
+        if (type === 'mock') return res.json({ success: true, data: mockData });
 
         const prompt = `
             Translate this social media caption into ${language}.
@@ -223,10 +265,13 @@ exports.translateCaption = async (req, res) => {
             }
         `;
 
-        if (type === 'mock') return res.json({ success: true, data: { translated: caption + ` (${language})` } });
-
-        const response = await generateText(type, instance, model, prompt);
-        res.json({ success: true, data: response });
+        try {
+            const response = await generateText(type, instance, model, prompt);
+            res.json({ success: true, data: response });
+        } catch (apiError) {
+            console.error('AI API Error (Falling back to mock):', apiError.message);
+            res.json({ success: true, data: mockData, note: "Mock data (API Error)" });
+        }
     } catch (error) {
         handleError(res, error);
     }

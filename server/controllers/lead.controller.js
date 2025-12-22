@@ -82,10 +82,10 @@ exports.sendFollowUp = async (req, res) => {
             return res.status(400).json({ error: 'No AI content generated yet' });
         }
 
-        // Get sender with API keys
+        // Get sender (without user keys, using system defaults)
         let sender = {};
         try {
-            sender = await User.findById(req.user.id).select('+apiKeys');
+            sender = await User.findById(req.user.id);
         } catch (e) {
             console.log('Error fetching sender:', e.message);
         }
@@ -127,22 +127,7 @@ async function generateAIResponse(lead, brand, userId) {
         Keep it concise and human-like.
     `;
 
-    // 1. Try User's OpenAI Key
-    try {
-        const user = await User.findById(userId).select('+apiKeys');
-        if (user?.apiKeys?.openai && user.apiKeys.openai.startsWith('sk-')) {
-            const openai = new OpenAI({ apiKey: user.apiKeys.openai });
-            const completion = await openai.chat.completions.create({
-                messages: [{ role: "user", content: prompt }],
-                model: "gpt-3.5-turbo",
-            });
-            return completion.choices[0].message.content;
-        }
-    } catch (e) {
-        console.log('OpenAI Generation failed, falling back to Groq/Mock', e.message);
-    }
-
-    // 2. Try System Groq
+    // 1. Try System Groq
     try {
         const apiKey = process.env.GROQ_API_KEY;
         if (apiKey && apiKey.startsWith('gsk_')) {
@@ -156,6 +141,6 @@ async function generateAIResponse(lead, brand, userId) {
         console.log('Groq Generation failed', e.message);
     }
 
-    // 3. Fallback Mock
+    // 2. Fallback Mock
     return `Hi ${lead.name},\n\nThanks for your interest in ${brandName}. We'd love to help you with your needs.\n\nBest,\n${brandName} Team`;
 }

@@ -98,11 +98,11 @@ exports.sendNewsletterNow = async (req, res) => {
         subscribers = mockSubscribers;
     }
 
-    // Get sender with API keys
+    // Get sender
     let sender = {};
     try {
         if (req.user && req.user.id) {
-             sender = await User.findById(req.user.id).select('+apiKeys');
+             sender = await User.findById(req.user.id);
         }
     } catch (e) {
         console.log('Error fetching sender:', e.message);
