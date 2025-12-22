@@ -43,7 +43,10 @@ exports.postToInstagram = async (content, imageUrl, accessToken, accountId) => {
 
 exports.postToWhatsApp = async (content, accessToken, phoneNumberId, to) => {
     try {
-        console.log(`[WhatsApp] Posting to ${to} via ${phoneNumberId}`);
+        console.log(`[WhatsApp] Posting to ${to} via PhoneID: ${phoneNumberId}`);
+        // Log first few chars of token for debug
+        console.log(`[WhatsApp] Token Start: ${accessToken ? accessToken.substring(0, 10) + '...' : 'MISSING'}`);
+
         const url = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
         
         const payload = {
@@ -60,9 +63,10 @@ exports.postToWhatsApp = async (content, accessToken, phoneNumberId, to) => {
             }
         });
         
+        console.log('[WhatsApp] API Success:', response.data);
         return { success: true, id: response.data.messages[0].id, platform: 'WhatsApp' };
     } catch (error) {
-        console.error('WhatsApp Post Error:', error.response?.data || error.message);
+        console.error('WhatsApp Post Error Full:', JSON.stringify(error.response?.data || error.message, null, 2));
         throw new Error(error.response?.data?.error?.message || 'Failed to post to WhatsApp');
     }
 };
@@ -103,13 +107,27 @@ exports.publishToWhatsApp = async (post) => {
             // If post.user is just an ID, fetch the user. If populated, use it.
             const user = post.user.connections ? post.user : await User.findById(post.user);
             
-            if (user && user.connections) {
-                const connection = user.connections.find(c => c.platform.toLowerCase() === 'whatsapp');
-                if (connection) {
-                    accessToken = connection.apiKey; // Assuming apiKey holds the Token
-                    phoneNumberId = connection.identifier; // Assuming identifier holds the Phone Number ID
+            if (user) {
+                console.log('[WhatsApp Wrapper] User found:', user._id);
+                if (user.connections) {
+                    const connection = user.connections.find(c => c.platform.toLowerCase() === 'whatsapp');
+                    if (connection) {
+                        console.log('[WhatsApp Wrapper] Connection found for WhatsApp');
+                        accessToken = connection.apiKey;
+                        phoneNumberId = connection.identifier;
+                        
+                        if (!accessToken || !phoneNumberId) {
+                            throw new Error('WhatsApp configuration incomplete. Missing Access Token or Phone Number ID in Settings.');
+                        }
+                    } else {
+                        console.log('[WhatsApp Wrapper] User has no WhatsApp connection');
+                    }
                 }
+            } else {
+                console.log('[WhatsApp Wrapper] User not found in DB');
             }
+        } else {
+            console.log('[WhatsApp Wrapper] Post has no user linked');
         }
 
         if (accessToken && phoneNumberId) {
