@@ -19,4 +19,4 @@ If the build fails, check the logs for:
 1. Missing `index.html` (should be fixed in latest commits)
 2. Environment variable issues
 
-(Triggering new deployment: v2)
+(Triggering new deployment: v2) 

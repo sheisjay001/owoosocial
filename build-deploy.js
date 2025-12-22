@@ -58,13 +58,15 @@ try {
 
   runCommand('npm install', clientDir);
   
-  // List files in client directory for debugging
-  console.log('--- Listing Client Directory Before Build ---');
-  try {
-      const files = fs.readdirSync(clientDir);
-      console.log('Files in client:', files);
-  } catch (e) {
-      console.error('Error listing client files:', e);
+  // Verify index.html exists before building
+  const indexHtml = path.join(clientDir, 'index.html');
+  if (!fs.existsSync(indexHtml)) {
+      console.error('CRITICAL ERROR: client/index.html is missing!');
+      console.log('Listing client directory content:');
+      console.log(fs.readdirSync(clientDir));
+      process.exit(1);
+  } else {
+      console.log('SUCCESS: client/index.html found.');
   }
 
   runCommand('npm run build', clientDir);
