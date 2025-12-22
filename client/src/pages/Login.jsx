@@ -117,6 +117,14 @@ export default function Login() {
             </Link>
           </p>
         </div>
+
+        <div className="mt-8 pt-6 border-t border-gray-100 flex justify-center space-x-4 text-xs text-gray-400">
+          <Link to="/privacy-policy" className="hover:text-gray-600">Privacy Policy</Link>
+          <span>&bull;</span>
+          <Link to="/terms" className="hover:text-gray-600">Terms of Service</Link>
+          <span>&bull;</span>
+          <Link to="/data-deletion" className="hover:text-gray-600">Data Deletion</Link>
+        </div>
       </div>
     </div>
   );

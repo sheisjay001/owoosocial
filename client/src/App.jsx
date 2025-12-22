@@ -17,6 +17,9 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import DataDeletion from './pages/DataDeletion';
 import PublicRoute from './components/PublicRoute';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -24,6 +27,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Legal Pages (Publicly Accessible) */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/data-deletion" element={<DataDeletion />} />
+
         {/* Public Routes (Redirect to Dashboard if logged in) */}
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />
