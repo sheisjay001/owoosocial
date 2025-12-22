@@ -1,7 +1,7 @@
 const app = require('../server/index');
 const connectDB = require('../server/config/db');
 
-// Vercel serverless function handler - using Catch-All Route [...route].js
+// Vercel serverless function handler - using Explicit Rewrites to api/index.js
 module.exports = async (req, res) => {
   try {
     // Log debug info

@@ -2,12 +2,16 @@
   "version": 2,
   "outputDirectory": ".",
   "functions": {
-    "api/[...route].js": {
+    "api/index.js": {
       "maxDuration": 10,
       "includeFiles": "server/**"
     }
   },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
     {
       "source": "/((?!api/).*)",
       "destination": "/index.html"

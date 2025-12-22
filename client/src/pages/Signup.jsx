@@ -153,11 +153,11 @@ export default function Signup() {
              type="button"
              onClick={async () => {
                try {
-                 const res = await axios.post('/api/test-post');
-                 alert('Test API Success: ' + JSON.stringify(res.data));
-               } catch (e) {
-                 alert('Test API Failed: ' + (e.response ? JSON.stringify(e.response.data) : e.message));
-               }
+                  const res = await axios.post('/api/test-post');
+                  alert(`[${new Date().toLocaleTimeString()}] Test API Success: ` + JSON.stringify(res.data));
+                } catch (e) {
+                  alert(`[${new Date().toLocaleTimeString()}] Test API Failed: ` + (e.response ? JSON.stringify(e.response.data) : e.message));
+                }
              }}
              className="text-xs text-gray-500 underline"
            >
