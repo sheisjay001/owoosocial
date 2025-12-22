@@ -6,6 +6,7 @@
     "server-install": "cd server && npm install",
     "build-client": "cd client && npm run build",
     "build": "node build-deploy.js",
+    "vercel-build": "node build-deploy.js",
     "start": "node server/index.js"
   },
   "engines": {

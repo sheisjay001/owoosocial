@@ -89,12 +89,20 @@ try {
     throw new Error('Client dist directory not found! Build failed?');
   }
 
-  // 3. Install Server Dependencies
+  // 3. Install Server Dependencies - SKIPPED (Root package.json handles this)
+  /*
   console.log('--- Installing Server Dependencies ---');
   runCommand('npm install', serverDir);
+  */
 
   console.log('--- Build Complete ---');
 } catch (error) {
   console.error('Build Failed:', error);
+  // Create public dir if it doesn't exist so Vercel doesn't fail completely
+  const publicDir = path.join(rootDir, 'public');
+  if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir);
+      fs.writeFileSync(path.join(publicDir, 'index.html'), '<h1>Build Failed</h1><p>Check logs.</p>');
+  }
   process.exit(1);
 }
