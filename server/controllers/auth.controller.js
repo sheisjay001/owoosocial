@@ -291,12 +291,11 @@ exports.sendVerificationEmail = async (req, res) => {
 
         await user.save();
 
-        // Create URL
-        const verifyUrl = `${req.protocol}://${req.get('host')}/verify-email/${verificationToken}`;
-        // Note: req.get('host') points to backend. If frontend is separate, we might need an env var.
-        // Assuming development setup where they might be same or we use env.
-        // Better: Use a FRONTEND_URL env var or fallback.
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        // Build secure verification link
+        // Priority: FRONTEND_URL > VERCEL_URL (auto) > production fallback
+        const frontendUrl = process.env.FRONTEND_URL
+          || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+          || 'https://owoosocial-rocf.vercel.app';
         const link = `${frontendUrl}/verify-email/${verificationToken}`;
 
         const message = `
@@ -493,5 +492,4 @@ exports.removeConnection = async (req, res) => {
       res.status(500).json({ success: false, error: error.message });
     }
   };
-
 
