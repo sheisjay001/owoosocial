@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="180" fill="url(#g)"/>
+  <g fill="#FFFFFF">
+    <circle cx="256" cy="512" r="140"/>
+    <circle cx="768" cy="512" r="140"/>
+  </g>
+  <g fill="#FFFFFF">
+    <path d="M512 380c-22 0-40 18-40 40v184c0 22 18 40 40 40s40-18 40-40V420c0-22-18-40-40-40z"/>
+    <path d="M396 512c0-64 52-116 116-116s116 52 116 116-52 116-116 116-116-52-116-116zm72 0c0 24 20 44 44 44s44-20 44-44-20-44-44-44-44 20-44 44z"/>
+  </g>
+  <g fill="#FFFFFF" opacity="0.12">
+    <circle cx="256" cy="512" r="220"/>
+    <circle cx="768" cy="512" r="220"/>
+    <circle cx="512" cy="512" r="260"/>
+  </g>
+  <g>
+    <text x="512" y="780" font-size="120" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle" fill="#FFFFFF">OWOO</text>
+  </g>
+</svg>
