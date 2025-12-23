@@ -1,7 +1,10 @@
 const Subscriber = require('../models/Subscriber');
-
 const csv = require('csv-parser');
 const { Readable } = require('stream');
+
+// In-memory fallback
+let mockSubscribers = [];
+exports.mockSubscribers = mockSubscribers;
 
 // @desc    Import subscribers from CSV
 // @route   POST /api/subscribers/upload-csv
@@ -39,16 +42,34 @@ exports.importSubscribers = async (req, res) => {
                 
                 for (const item of results) {
                     try {
-                        await Subscriber.updateOne(
-                            { user: req.user.id, email: item.email },
-                            { 
-                                $set: { 
+                        if (!isOffline) {
+                            await Subscriber.updateOne(
+                                { user: req.user.id, email: item.email },
+                                { 
+                                    $set: { 
+                                        name: item.name,
+                                        status: 'subscribed' 
+                                    } 
+                                },
+                                { upsert: true }
+                            );
+                        } else {
+                            // Mock storage logic
+                            const existingIndex = mockSubscribers.findIndex(s => s.email === item.email && s.user === req.user.id);
+                            if (existingIndex > -1) {
+                                mockSubscribers[existingIndex].name = item.name;
+                                mockSubscribers[existingIndex].status = 'subscribed';
+                            } else {
+                                mockSubscribers.push({
+                                    _id: `mock_sub_${Date.now()}_${Math.random()}`,
+                                    user: req.user.id,
+                                    email: item.email,
                                     name: item.name,
-                                    status: 'subscribed' 
-                                } 
-                            },
-                            { upsert: true }
-                        );
+                                    status: 'subscribed',
+                                    createdAt: new Date()
+                                });
+                            }
+                        }
                         addedCount++;
                     } catch (e) {
                         errors.push({ email: item.email, error: e.message });
@@ -76,7 +97,13 @@ exports.importSubscribers = async (req, res) => {
 // @access  Private
 exports.getSubscribers = async (req, res) => {
   try {
-    const subscribers = await Subscriber.find({ user: req.user.id }).sort({ createdAt: -1 });
+    let subscribers;
+    try {
+        subscribers = await Subscriber.find({ user: req.user.id }).sort({ createdAt: -1 });
+    } catch (e) {
+        console.log('DB Error, using in-memory subscribers');
+        subscribers = mockSubscribers.filter(s => s.user === req.user.id);
+    }
     res.status(200).json({ success: true, count: subscribers.length, data: subscribers });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -95,16 +122,36 @@ exports.addSubscriber = async (req, res) => {
     }
 
     // Check if already exists for this user
-    const existing = await Subscriber.findOne({ user: req.user.id, email });
+    let existing;
+    try {
+        existing = await Subscriber.findOne({ user: req.user.id, email });
+    } catch (e) {
+        existing = mockSubscribers.find(s => s.user === req.user.id && s.email === email);
+    }
+
     if (existing) {
       return res.status(400).json({ success: false, error: 'Subscriber already exists' });
     }
 
-    const subscriber = await Subscriber.create({
-      user: req.user.id,
-      email,
-      name
-    });
+    let subscriber;
+    try {
+        subscriber = await Subscriber.create({
+            user: req.user.id,
+            email,
+            name
+        });
+    } catch (e) {
+        console.log('DB Error, saving subscriber to memory');
+        subscriber = {
+            _id: `mock_sub_${Date.now()}`,
+            user: req.user.id,
+            email,
+            name,
+            status: 'subscribed',
+            createdAt: new Date()
+        };
+        mockSubscribers.push(subscriber);
+    }
 
     res.status(201).json({ success: true, data: subscriber });
   } catch (error) {

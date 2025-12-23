@@ -8,6 +8,7 @@ const mockSubscribers = [
 ];
 
 let mockNewsletters = []; // In-memory fallback if DB fails
+exports.mockNewsletters = mockNewsletters;
 
 exports.createNewsletter = async (req, res) => {
   try {

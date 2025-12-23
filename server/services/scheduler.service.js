@@ -9,11 +9,17 @@ const socialService = require('./social.service');
 const emailService = require('./email.service');
 const podcastService = require('./podcast.service');
 
+// Import controllers for offline mode access
+const newsletterController = require('../controllers/newsletter.controller');
+const subscriberController = require('../controllers/subscriber.controller');
+
 const initScheduler = () => {
   // Check every minute for posts and newsletters
   cron.schedule('* * * * *', async () => {
-    if (mongoose.connection.readyState !== 1) {
-      return;
+    const isOffline = mongoose.connection.readyState !== 1;
+
+    if (isOffline) {
+        console.log('[Scheduler] Running in OFFLINE MODE (Using in-memory data)');
     }
 
     console.log('Running Scheduler: Checking for due tasks...');
@@ -255,7 +261,7 @@ const initScheduler = () => {
                 // subscribers = ['mock@example.com']; 
                 newsletter.status = 'failed';
                 newsletter.analytics = { ...newsletter.analytics, failureReason: 'No subscribers' };
-                await newsletter.save();
+                if (newsletter.save) await newsletter.save();
                 continue;
             }
 
@@ -265,12 +271,12 @@ const initScheduler = () => {
             newsletter.status = 'sent';
             newsletter.sentAt = new Date();
             newsletter.recipientCount = subscribers.length;
-            await newsletter.save();
+            if (newsletter.save) await newsletter.save();
             console.log(`[Scheduler] Successfully sent newsletter ${newsletter._id} to ${subscribers.length} recipients.`);
           } catch (err) {
             console.error(`[Scheduler] Failed to send newsletter ${newsletter._id}:`, err);
             newsletter.status = 'failed';
-            await newsletter.save();
+            if (newsletter.save) await newsletter.save();
           }
         }
       }
