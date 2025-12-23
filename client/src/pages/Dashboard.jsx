@@ -7,10 +7,26 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ totalPosts: 0, totalEngagement: 0, newFollowers: 0 });
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState('User');
 
   useEffect(() => {
     fetchDashboardStats();
+    fetchUserProfile();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.data && response.data.data.name) {
+        setUserName(response.data.data.name);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const fetchDashboardStats = async () => {
     try {
