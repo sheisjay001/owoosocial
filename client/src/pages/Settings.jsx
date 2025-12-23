@@ -100,9 +100,11 @@ export default function Settings() {
         <p className="text-gray-500 mt-2">Manage your connected social accounts and API keys.</p>
       </div>
 
+      <EmailDomainSettings />
+
       <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
         <div className="p-6 border-b bg-gray-50">
-          <h2 className="text-lg font-semibold text-gray-900">Messaging Platforms</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Messaging Apps</h2>
           <p className="text-sm text-gray-500">Connect messaging apps to broadcast to groups and channels.</p>
         </div>
         
