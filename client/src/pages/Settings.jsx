@@ -490,9 +490,10 @@ export default function Settings() {
                 <h4 className="font-semibold mb-1">How to Connect:</h4>
                 {modalPlatform === 'Telegram' ? (
                     <ol className="list-decimal pl-4 space-y-1">
-                        <li>Open Telegram and search for our bot (e.g. <strong>@OwooSchedulerBot</strong>).</li>
-                        <li>Add the bot to your Channel/Group as an <strong>Administrator</strong>.</li>
-                        <li>Enter your Channel Username (e.g. @mychannel) or Chat ID below.</li>
+                        <li>Open Telegram and search for <strong>@BotFather</strong>.</li>
+                        <li>Create a new bot with <code>/newbot</code> and copy the <strong>HTTP API Token</strong>.</li>
+                        <li>Add your new bot to your Channel/Group as an <strong>Administrator</strong>.</li>
+                        <li>Enter the <strong>Bot Token</strong> and your <strong>Chat ID</strong> below.</li>
                     </ol>
                 ) : modalPlatform === 'WhatsApp' ? (
                     <ol className="list-decimal pl-4 space-y-1">
