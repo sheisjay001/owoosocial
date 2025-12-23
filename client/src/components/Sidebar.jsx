@@ -8,7 +8,6 @@ const sidebarItems = [
   { icon: PenTool, label: 'Create Post', path: '/create' },
   { icon: MessageSquare, label: 'Inbox', path: '/inbox' },
   { icon: Mail, label: 'Newsletters', path: '/newsletters' },
-  { icon: Users, label: 'Subscribers', path: '/subscribers' },
   { icon: Phone, label: 'WhatsApp', path: '/whatsapp' },
   { icon: Mic, label: 'Podcasts', path: '/podcasts' },
   { icon: Calendar, label: 'Calendar', path: '/calendar' },
