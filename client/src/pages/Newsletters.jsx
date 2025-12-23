@@ -37,14 +37,14 @@ export default function Newsletters() {
       await axios.post('/api/newsletters', {
         subject: formData.subject,
         content: formData.content,
-        scheduledTime: formData.scheduledTime ? new Date(formData.scheduledTime) : null,
-        status: formData.scheduledTime ? 'scheduled' : 'draft',
+        scheduledTime: formData.scheduleTime ? new Date(formData.scheduleTime) : null,
+        status: formData.scheduleTime ? 'scheduled' : 'draft',
         audience: formData.audience
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setShowForm(false);
-      setFormData({ subject: '', content: '', scheduledTime: '', audience: 'all' });
+      setFormData({ subject: '', content: '', scheduleTime: '', audience: 'all' });
       fetchNewsletters();
       alert('Newsletter created successfully!');
     } catch (error) {

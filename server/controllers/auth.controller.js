@@ -268,14 +268,95 @@ exports.updateDetails = async (req, res) => {
 // @access  Private
 exports.sendVerificationEmail = async (req, res) => {
     try {
-        // In a real app, send an email with a token
-        // Here we'll just auto-verify for simplicity or mock sending
-        console.log(`Sending verification email to user ${req.user.id}`);
-        
-        // Simulating verification for now since we don't have a full verification flow UI yet
-        // Or we can just say "Email sent"
-        
-        res.status(200).json({ success: true, data: 'Verification email sent' });
+        const user = await User.findById(req.user.id);
+        if (!user) {
+             return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        if (user.emailVerified) {
+            return res.status(400).json({ success: false, error: 'Email already verified' });
+        }
+
+        // Generate token
+        const verificationToken = crypto.randomBytes(20).toString('hex');
+
+        // Hash and set to user
+        user.verificationToken = crypto
+            .createHash('sha256')
+            .update(verificationToken)
+            .digest('hex');
+            
+        // Set expire (24 hours)
+        user.verificationTokenExpire = Date.now() + 24 * 60 * 60 * 1000;
+
+        await user.save();
+
+        // Create URL
+        const verifyUrl = `${req.protocol}://${req.get('host')}/verify-email/${verificationToken}`;
+        // Note: req.get('host') points to backend. If frontend is separate, we might need an env var.
+        // Assuming development setup where they might be same or we use env.
+        // Better: Use a FRONTEND_URL env var or fallback.
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const link = `${frontendUrl}/verify-email/${verificationToken}`;
+
+        const message = `
+          <h1>Email Verification</h1>
+          <p>Please click the link below to verify your email address:</p>
+          <a href="${link}" clicktracking=off>${link}</a>
+          <p>This link expires in 24 hours.</p>
+        `;
+
+        try {
+            await emailService.sendEmail(
+                user.email,
+                'Verify Your Email - OWOO Scheduler',
+                message,
+                { name: 'OWOO Support' }
+            );
+            
+            res.status(200).json({ success: true, data: 'Verification email sent' });
+        } catch (err) {
+            user.verificationToken = undefined;
+            user.verificationTokenExpire = undefined;
+            await user.save();
+            return res.status(500).json({ success: false, error: 'Email could not be sent' });
+        }
+
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// @desc    Verify Email
+// @route   PUT /api/auth/verifyemail/:token
+// @access  Public
+exports.verifyEmail = async (req, res) => {
+    try {
+        const verificationToken = crypto
+            .createHash('sha256')
+            .update(req.params.token)
+            .digest('hex');
+
+        const user = await User.findOne({
+            verificationToken,
+            verificationTokenExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, error: 'Invalid or expired token' });
+        }
+
+        user.emailVerified = true;
+        user.verificationToken = undefined;
+        user.verificationTokenExpire = undefined;
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            data: 'Email verified successfully',
+            token: generateToken(user._id) // Optionally log them in
+        });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
