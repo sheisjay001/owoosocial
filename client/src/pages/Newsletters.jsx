@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Mail, Plus, Send, Clock, CheckCircle } from 'lucide-react';
+import Subscribers from './Subscribers';
 
 export default function Newsletters() {
+  const [activeTab, setActiveTab] = useState('campaigns');
   const [newsletters, setNewsletters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -81,6 +83,21 @@ export default function Newsletters() {
         >
           <Plus className="w-4 h-4" />
           Create Newsletter
+        </button>
+      </div>
+
+      <div className="flex border-b mb-6">
+        <button
+          className={`px-4 py-2 font-medium text-sm ${activeTab === 'campaigns' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          onClick={() => setActiveTab('campaigns')}
+        >
+          Campaigns
+        </button>
+        <button
+          className={`px-4 py-2 font-medium text-sm ${activeTab === 'subscribers' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          onClick={() => setActiveTab('subscribers')}
+        >
+          Subscribers
         </button>
       </div>
 
