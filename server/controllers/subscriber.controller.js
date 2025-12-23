@@ -22,16 +22,15 @@ exports.importSubscribers = async (req, res) => {
         stream
             .pipe(csv())
             .on('data', (data) => {
-                // Normalize keys to lowercase to be safe
-                const cleanData = {};
-                Object.keys(data).forEach(key => {
-                    cleanData[key.toLowerCase().trim()] = data[key];
-                });
-                
-                if (cleanData.email) {
+                // Flexible column matching
+                const keys = Object.keys(data);
+                const emailKey = keys.find(k => k.toLowerCase().includes('email') || k.toLowerCase().includes('mail'));
+                const nameKey = keys.find(k => k.toLowerCase().includes('name') || k.toLowerCase().includes('first'));
+
+                if (emailKey && data[emailKey]) {
                     results.push({
-                        email: cleanData.email,
-                        name: cleanData.name || cleanData.firstname || cleanData.first_name || ''
+                        email: data[emailKey].trim(),
+                        name: nameKey ? data[nameKey].trim() : ''
                     });
                 }
             })

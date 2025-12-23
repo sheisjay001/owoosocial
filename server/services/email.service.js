@@ -1,18 +1,20 @@
 const { Resend } = require('resend');
 const { MailService } = require('@sendgrid/mail');
+const dotenv = require('dotenv');
+const path = require('path');
 
-// System Defaults
-const systemResendKey = process.env.RESEND_API_KEY;
-const systemSendGridKey = process.env.SENDGRID_API_KEY;
-let systemProvider = 'mock';
-
-if (systemResendKey && systemResendKey.startsWith('re_')) systemProvider = 'resend';
-else if (systemSendGridKey && systemSendGridKey.startsWith('SG.')) systemProvider = 'sendgrid';
+// Ensure env is loaded
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const getProvider = () => {
-    // Only use System Fallback
-    if (systemProvider === 'resend') return { type: 'resend', client: new Resend(systemResendKey) };
-    if (systemProvider === 'sendgrid') {
+    // Reload env vars dynamically to catch updates without restart
+    const systemResendKey = process.env.RESEND_API_KEY;
+    const systemSendGridKey = process.env.SENDGRID_API_KEY;
+
+    if (systemResendKey && systemResendKey.startsWith('re_')) {
+        return { type: 'resend', client: new Resend(systemResendKey) };
+    }
+    if (systemSendGridKey && systemSendGridKey.startsWith('SG.')) {
         const sg = new MailService();
         sg.setApiKey(systemSendGridKey);
         return { type: 'sendgrid', client: sg };
