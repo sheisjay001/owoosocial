@@ -11,12 +11,27 @@ export default function Newsletters() {
   const [formData, setFormData] = useState({
     subject: '',
     content: '',
-    scheduleTime: ''
+    scheduleTime: '',
+    newRecipients: ''
   });
+  const [subscriberCount, setSubscriberCount] = useState(0);
 
   useEffect(() => {
     fetchNewsletters();
+    fetchSubscriberCount();
   }, []);
+
+  const fetchSubscriberCount = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get('/api/subscribers', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSubscriberCount(response.data.count || response.data.data.length || 0);
+    } catch (error) {
+      console.error('Error fetching subscribers:', error);
+    }
+  };
 
   const fetchNewsletters = async () => {
     try {
@@ -36,6 +51,20 @@ export default function Newsletters() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('authToken');
+
+      // 1. Add new recipients if any
+      if (formData.newRecipients && formData.newRecipients.trim()) {
+        const emails = formData.newRecipients.split(/[\n,]+/).map(e => e.trim()).filter(e => e);
+        if (emails.length > 0) {
+           await axios.post('/api/subscribers/bulk', { emails }, {
+             headers: { Authorization: `Bearer ${token}` }
+           });
+           // Refresh count
+           fetchSubscriberCount();
+        }
+      }
+
+      // 2. Create Newsletter
       await axios.post('/api/newsletters', {
         subject: formData.subject,
         content: formData.content,
@@ -46,7 +75,7 @@ export default function Newsletters() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setShowForm(false);
-      setFormData({ subject: '', content: '', scheduleTime: '', audience: 'all' });
+      setFormData({ subject: '', content: '', scheduleTime: '', newRecipients: '', audience: 'all' });
       fetchNewsletters();
       alert('Newsletter created successfully!');
     } catch (error) {
@@ -121,6 +150,20 @@ export default function Newsletters() {
                 value={formData.subject}
                 onChange={(e) => setFormData({...formData, subject: e.target.value})}
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Recipients</label>
+              <div className="bg-gray-50 p-3 rounded-md border text-sm text-gray-600 mb-2">
+                Sending to: <strong>All {subscriberCount} Subscribers</strong>
+              </div>
+              <textarea 
+                rows="3"
+                placeholder="Paste new email addresses here (comma or new line separated) to add them to your list..."
+                className="w-full px-3 py-2 border rounded-md text-sm"
+                value={formData.newRecipients}
+                onChange={(e) => setFormData({...formData, newRecipients: e.target.value})}
+              />
+              <p className="text-xs text-gray-500 mt-1">Emails entered here will be added to your subscriber list automatically.</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
