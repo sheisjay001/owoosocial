@@ -92,7 +92,12 @@ const initScheduler = () => {
 
                     // Get WhatsApp Credentials
                     const waConnection = broadcast.user.connections.find(c => c.platform === 'WhatsApp');
-                    if (!waConnection || !waConnection.accessToken || !waConnection.platformId) {
+                    
+                    // Fallback to apiKey/identifier if accessToken/platformId are missing
+                    const accessToken = waConnection?.accessToken || waConnection?.apiKey;
+                    const phoneNumberId = waConnection?.platformId || waConnection?.identifier;
+
+                    if (!waConnection || !accessToken || !phoneNumberId) {
                         console.error(`[Broadcast] Missing WhatsApp credentials for user ${broadcast.user._id}`);
                         broadcast.status = 'failed'; // Or paused?
                         await broadcast.save();
