@@ -19,6 +19,8 @@ import {
   Mic,
   Video
 } from 'lucide-react';
+import EmailDomainSettings from '../components/EmailDomainSettings';
+import UserProfileSettings from '../components/UserProfileSettings';
 
 export default function Settings() {
   const [connections, setConnections] = useState([]);
@@ -99,6 +101,8 @@ export default function Settings() {
         <h1 className="text-3xl font-bold text-gray-900">Settings & Integrations</h1>
         <p className="text-gray-500 mt-2">Manage your connected social accounts and API keys.</p>
       </div>
+
+      <UserProfileSettings />
 
       <EmailDomainSettings />
 

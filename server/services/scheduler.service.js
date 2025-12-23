@@ -127,8 +127,8 @@ const initScheduler = () => {
                         try {
                             await socialService.postToWhatsApp(
                                 broadcast.message,
-                                waConnection.accessToken,
-                                waConnection.platformId,
+                                accessToken,
+                                phoneNumberId,
                                 recipient.contact.phoneNumber
                             );
                             recipient.status = 'sent';

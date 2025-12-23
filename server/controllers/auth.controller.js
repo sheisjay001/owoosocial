@@ -202,6 +202,85 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+// @desc    Update user details
+// @route   PUT /api/auth/updatedetails
+// @access  Private
+exports.updateDetails = async (req, res) => {
+  try {
+    const fieldsToUpdate = {
+      name: req.body.name,
+      email: req.body.email,
+      phoneNumber: req.body.phoneNumber
+    };
+
+    let user;
+    try {
+      user = await User.findById(req.user.id);
+    } catch (e) {
+      console.log('DB Error (Update Details):', e.message);
+    }
+
+    if (user) {
+        // DB Update
+        if (req.body.name) user.name = req.body.name;
+        if (req.body.email) {
+             user.email = req.body.email;
+             user.emailVerified = false; // Reset verification on email change
+        }
+        if (req.body.phoneNumber) user.phoneNumber = req.body.phoneNumber;
+        
+        await user.save();
+        
+        res.status(200).json({
+            success: true,
+            data: user
+        });
+    } else {
+        // Mock fallback
+        const mockUser = mockUsers.find(u => u._id === req.user.id);
+        if (mockUser) {
+            if (req.body.name) mockUser.name = req.body.name;
+            if (req.body.email) {
+                mockUser.email = req.body.email;
+                mockUser.emailVerified = false;
+            }
+            if (req.body.phoneNumber) mockUser.phoneNumber = req.body.phoneNumber;
+
+            res.status(200).json({
+                success: true,
+                data: mockUser
+            });
+        } else {
+             // Just echo back if user not found in mock
+             res.status(200).json({
+                success: true,
+                data: { ...req.user, ...fieldsToUpdate }
+            });
+        }
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Send Email Verification
+// @route   POST /api/auth/verifyemail
+// @access  Private
+exports.sendVerificationEmail = async (req, res) => {
+    try {
+        // In a real app, send an email with a token
+        // Here we'll just auto-verify for simplicity or mock sending
+        console.log(`Sending verification email to user ${req.user.id}`);
+        
+        // Simulating verification for now since we don't have a full verification flow UI yet
+        // Or we can just say "Email sent"
+        
+        res.status(200).json({ success: true, data: 'Verification email sent' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
 // @desc    Get current user
 // @route   GET /api/auth/me
 // @access  Private

@@ -21,9 +21,11 @@ export default function EmailDomainSettings() {
       const response = await axios.get('/api/domains', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setDomains(response.data.data);
+      setDomains(response.data.data || []);
     } catch (error) {
       console.error('Error fetching domains:', error);
+      // Fallback to empty array to prevent map errors
+      setDomains([]);
     } finally {
       setLoading(false);
     }
