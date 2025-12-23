@@ -1,5 +1,6 @@
 const { Resend } = require('resend');
 const { MailService } = require('@sendgrid/mail');
+const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
 const path = require('path');
 
@@ -10,6 +11,23 @@ const getProvider = () => {
     // Reload env vars dynamically to catch updates without restart
     const systemResendKey = process.env.RESEND_API_KEY;
     const systemSendGridKey = process.env.SENDGRID_API_KEY;
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+
+    // Priority: SMTP (best for "no domain" users) > Resend > SendGrid
+    if (smtpHost && smtpUser && smtpPass) {
+        const transporter = nodemailer.createTransport({
+            host: smtpHost,
+            port: process.env.SMTP_PORT || 587,
+            secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+            auth: {
+                user: smtpUser,
+                pass: smtpPass,
+            },
+        });
+        return { type: 'smtp', client: transporter };
+    }
 
     if (systemResendKey && systemResendKey.startsWith('re_')) {
         return { type: 'resend', client: new Resend(systemResendKey) };
@@ -35,12 +53,34 @@ const emailService = {
     }
 
     const fromName = sender.name || 'OWOO';
-    // If sender provides a specific fromEmail (e.g. verified domain), use it. Otherwise use system default.
-    const fromEmail = sender.fromEmail || process.env.EMAIL_FROM_ADDRESS || (type === 'resend' ? 'onboarding@resend.dev' : 'test@example.com'); 
+    // If sender provides a specific fromEmail (e.g. verified domain), use it. 
+    // For SMTP, default to the authenticated user if not specified.
+    let defaultFrom = process.env.EMAIL_FROM_ADDRESS || 'test@example.com';
+    if (type === 'smtp') {
+        // If EMAIL_FROM_ADDRESS is not set, fallback to SMTP_USER
+        if (!process.env.EMAIL_FROM_ADDRESS) {
+             defaultFrom = process.env.SMTP_USER; 
+        }
+    } else if (type === 'resend') {
+        defaultFrom = 'onboarding@resend.dev';
+    }
+    
+    const fromEmail = sender.fromEmail || defaultFrom;
     const replyTo = sender.email; 
 
     try {
-      if (type === 'resend') {
+      if (type === 'smtp') {
+        const info = await client.sendMail({
+            from: `"${fromName}" <${fromEmail}>`,
+            to: to,
+            subject: subject,
+            html: htmlContent,
+            replyTo: replyTo
+        });
+        console.log(`[Email Service] Sent email to ${to} via SMTP: ${info.messageId}`);
+        return info;
+
+      } else if (type === 'resend') {
         const { data, error } = await client.emails.send({
           from: `${fromName} <${fromEmail}>`,
           to: [to],
@@ -72,6 +112,10 @@ const emailService = {
 
     } catch (err) {
       console.error('Email Service Error:', err);
+      // If it's a configuration error (like domain verification), throw it
+      if (err.message && (err.message.includes('verify a domain') || err.message.includes('own email address'))) {
+          throw err;
+      }
       // Fallback to mock if API fails (optional, good for dev)
       return { messageId: `fallback_mock_${Date.now()}` };
     }
@@ -88,26 +132,45 @@ const emailService = {
         // Mock Send
         await new Promise(resolve => setTimeout(resolve, 1000));
         console.log(`[Mock Newsletter] Broadcast Complete. Sent ${subscribers.length} emails.`);
-        return { campaignId: `mock_camp_${Date.now()}`, sentCount: subscribers.length };
+        return { campaignId: `mock_camp_${Date.now()}`, sentCount: subscribers.length, failedCount: 0, errors: [] };
     }
 
     let sentCount = 0;
+    let failedCount = 0;
+    let errors = [];
     
     const fromName = sender.name || 'OWOO';
-    const fromEmail = sender.fromEmail || process.env.EMAIL_FROM_ADDRESS || (type === 'resend' ? 'onboarding@resend.dev' : 'test@example.com');
+    let defaultFrom = process.env.EMAIL_FROM_ADDRESS || 'test@example.com';
+    if (type === 'smtp') {
+        if (!process.env.EMAIL_FROM_ADDRESS) {
+            defaultFrom = process.env.SMTP_USER;
+        }
+    } else if (type === 'resend') {
+        defaultFrom = 'onboarding@resend.dev';
+    }
+    const fromEmail = sender.fromEmail || defaultFrom;
     const replyTo = sender.email;
 
     // Send loop
     for (const subscriber of subscribers) {
         try {
-            if (type === 'resend') {
-                await client.emails.send({
+            if (type === 'smtp') {
+                await client.sendMail({
+                    from: `"${fromName}" <${fromEmail}>`,
+                    to: subscriber,
+                    subject: newsletter.subject,
+                    html: newsletter.content,
+                    replyTo: replyTo
+                });
+            } else if (type === 'resend') {
+                const { error } = await client.emails.send({
                     from: `${fromName} <${fromEmail}>`,
                     to: [subscriber],
                     subject: newsletter.subject,
                     html: newsletter.content, 
                     reply_to: replyTo
                 });
+                if (error) throw new Error(error.message);
             } else if (type === 'sendgrid') {
                 const msg = {
                     to: subscriber,
@@ -121,11 +184,13 @@ const emailService = {
             sentCount++;
         } catch (e) {
             console.error(`Failed to send to ${subscriber}:`, e.message);
+            failedCount++;
+            errors.push({ email: subscriber, error: e.message });
         }
     }
     
     console.log(`[Newsletter Service] Broadcast Complete. Sent ${sentCount}/${subscribers.length} emails.`);
-    return { campaignId: `camp_${Date.now()}`, sentCount };
+    return { campaignId: `camp_${Date.now()}`, sentCount, failedCount, errors };
   },
 
   addDomain: async (domainName) => {

@@ -12,7 +12,7 @@ exports.mockNewsletters = mockNewsletters;
 
 exports.createNewsletter = async (req, res) => {
   try {
-    const { subject, content, scheduledTime, status } = req.body;
+    const { subject, content, scheduledTime, status, audience } = req.body;
     let newsletter;
 
     try {
@@ -21,7 +21,8 @@ exports.createNewsletter = async (req, res) => {
         content,
         scheduledTime,
         status: status || 'draft',
-        user: req.user.id // Link to creator
+        user: req.user.id, // Link to creator
+        audience: audience || 'all' // Save audience preference
       });
     } catch (dbError) {
       console.log('DB Error, using in-memory store:', dbError.message);
@@ -97,9 +98,13 @@ exports.sendNewsletterNow = async (req, res) => {
     }
 
     // Fallback to mock if no users found
+    // if (subscribers.length === 0) {
+    //     console.log('No users found in DB, using mock subscribers.');
+    //     subscribers = mockSubscribers;
+    // }
+    
     if (subscribers.length === 0) {
-        console.log('No users found in DB, using mock subscribers.');
-        subscribers = mockSubscribers;
+         return res.status(400).json({ success: false, error: 'No subscribers found. Please add subscribers first.' });
     }
 
     // Get sender
@@ -112,11 +117,18 @@ exports.sendNewsletterNow = async (req, res) => {
         console.log('Error fetching sender:', e.message);
     }
 
-    await emailService.sendNewsletter(newsletter, subscribers, sender);
+    const result = await emailService.sendNewsletter(newsletter, subscribers, sender);
+    
+    // Check if total failure
+    if (result.sentCount === 0 && result.failedCount > 0) {
+        // Return first error message
+        const firstError = result.errors[0]?.error || 'Failed to send emails';
+        return res.status(400).json({ success: false, error: firstError, details: result.errors });
+    }
     
     newsletter.status = 'sent';
     newsletter.sentAt = new Date();
-    newsletter.recipientCount = subscribers.length;
+    newsletter.recipientCount = result.sentCount;
     
     // Save back to DB or mock store
     if (newsletter.save) {
@@ -126,7 +138,15 @@ exports.sendNewsletterNow = async (req, res) => {
         if (index !== -1) mockNewsletters[index] = newsletter;
     }
 
-    res.status(200).json({ success: true, data: newsletter });
+    res.status(200).json({ 
+        success: true, 
+        data: newsletter,
+        summary: {
+            sent: result.sentCount,
+            failed: result.failedCount,
+            errors: result.errors
+        }
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

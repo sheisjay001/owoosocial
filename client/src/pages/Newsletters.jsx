@@ -88,14 +88,20 @@ export default function Newsletters() {
     if (!confirm('Are you sure you want to send this newsletter now?')) return;
     try {
       const token = localStorage.getItem('authToken');
-      await axios.post(`/api/newsletters/${id}/send`, {}, {
+      const response = await axios.post(`/api/newsletters/${id}/send`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Newsletter sent!');
+      const summary = response.data.summary;
+      if (summary && summary.failed > 0) {
+          alert(`Newsletter sent to ${summary.sent} subscribers. Failed for ${summary.failed}.`);
+      } else {
+          alert('Newsletter sent successfully!');
+      }
       fetchNewsletters();
     } catch (error) {
       console.error('Error sending newsletter:', error);
-      alert('Failed to send newsletter');
+      const msg = error.response?.data?.error || 'Failed to send newsletter';
+      alert(msg);
     }
   };
 
@@ -153,17 +159,44 @@ export default function Newsletters() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Recipients</label>
-              <div className="bg-gray-50 p-3 rounded-md border text-sm text-gray-600 mb-2">
-                Sending to: <strong>All {subscriberCount} Subscribers</strong>
+              
+              {/* Option to select All or Specific Subscribers */}
+              <div className="mb-3 space-y-2">
+                 <label className="flex items-center space-x-2 text-sm text-gray-700">
+                    <input 
+                      type="radio" 
+                      name="audience" 
+                      value="all"
+                      checked={formData.audience !== 'list'}
+                      onChange={() => setFormData({...formData, audience: 'all'})}
+                    />
+                    <span>All Subscribers ({subscriberCount})</span>
+                 </label>
+                 
+                 <label className="flex items-center space-x-2 text-sm text-gray-700">
+                    <input 
+                      type="radio" 
+                      name="audience" 
+                      value="list"
+                      checked={formData.audience === 'list'}
+                      onChange={() => setFormData({...formData, audience: 'list'})}
+                    />
+                    <span>Paste Email List</span>
+                 </label>
               </div>
-              <textarea 
-                rows="3"
-                placeholder="Paste new email addresses here (comma or new line separated) to add them to your list..."
-                className="w-full px-3 py-2 border rounded-md text-sm"
-                value={formData.newRecipients}
-                onChange={(e) => setFormData({...formData, newRecipients: e.target.value})}
-              />
-              <p className="text-xs text-gray-500 mt-1">Emails entered here will be added to your subscriber list automatically.</p>
+
+              {formData.audience === 'list' && (
+                <div className="mb-4">
+                  <textarea 
+                    rows="4"
+                    placeholder="Paste email addresses here (comma or new line separated)..."
+                    className="w-full px-3 py-2 border rounded-md text-sm"
+                    value={formData.newRecipients}
+                    onChange={(e) => setFormData({...formData, newRecipients: e.target.value})}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">These emails will be added to your subscriber list automatically.</p>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
