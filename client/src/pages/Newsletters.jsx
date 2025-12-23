@@ -84,7 +84,11 @@ export default function Newsletters() {
         </button>
       </div>
 
-      {showForm && (
+      {activeTab === 'subscribers' ? (
+        <Subscribers />
+      ) : (
+        <>
+          {showForm && (
         <div className="bg-white p-6 rounded-lg border shadow-sm mb-6">
           <h2 className="text-lg font-semibold mb-4">New Campaign</h2>
           <form onSubmit={handleCreate} className="space-y-4">
@@ -117,70 +121,69 @@ export default function Newsletters() {
                 onChange={(e) => setFormData({...formData, scheduleTime: e.target.value})}
               />
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-3 mt-4">
               <button 
-                type="button" 
+                type="button"
                 onClick={() => setShowForm(false)}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
               >
                 Cancel
               </button>
               <button 
-                type="submit" 
+                type="submit"
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
-                Save Campaign
+                Create & Schedule
               </button>
             </div>
           </form>
         </div>
       )}
 
+      {/* Newsletter List */}
       <div className="grid gap-4">
         {loading ? (
-          <div>Loading...</div>
+          <p>Loading...</p>
         ) : newsletters.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <Mail className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <div className="text-center py-12 bg-white rounded-lg border border-dashed">
+            <Mail className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <h3 className="text-lg font-medium text-gray-900">No newsletters yet</h3>
-            <p className="text-gray-500 mt-1">Create your first email campaign.</p>
+            <p className="text-gray-500 mt-1">Create your first email campaign to get started.</p>
           </div>
         ) : (
-          newsletters.map((newsletter) => (
-            <div key={newsletter._id} className="bg-white p-6 rounded-lg border shadow-sm">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold text-lg text-gray-900">{newsletter.subject}</h3>
-                  <p className="text-gray-600 mt-1 line-clamp-2">{newsletter.content}</p>
-                  <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium uppercase ${
-                      newsletter.status === 'sent' ? 'bg-green-100 text-green-800' :
-                      newsletter.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {newsletter.status}
+          newsletters.map(newsletter => (
+            <div key={newsletter._id} className="bg-white p-6 rounded-lg border shadow-sm flex justify-between items-center">
+              <div>
+                <h3 className="font-semibold text-lg text-gray-900">{newsletter.subject}</h3>
+                <p className="text-sm text-gray-500 mt-1 line-clamp-2">{newsletter.content}</p>
+                <div className="flex items-center gap-4 mt-3">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium 
+                    ${newsletter.status === 'sent' ? 'bg-green-100 text-green-700' : 
+                      newsletter.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : 
+                      'bg-gray-100 text-gray-700'}`}>
+                    {newsletter.status.charAt(0).toUpperCase() + newsletter.status.slice(1)}
+                  </span>
+                  {newsletter.scheduledTime && (
+                    <span className="flex items-center gap-1 text-xs text-gray-500">
+                      <Clock className="w-3 h-3" />
+                      {new Date(newsletter.scheduledTime).toLocaleString()}
                     </span>
-                    {newsletter.scheduledTime && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {new Date(newsletter.scheduledTime).toLocaleString()}
-                      </span>
-                    )}
-                    {newsletter.sentAt && (
-                      <span className="flex items-center gap-1 text-green-600">
-                        <CheckCircle className="w-4 h-4" />
-                        Sent on {new Date(newsletter.sentAt).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
+                  )}
+                  {newsletter.sentAt && (
+                    <span className="flex items-center gap-1 text-xs text-green-600">
+                      <CheckCircle className="w-3 h-3" />
+                      Sent {new Date(newsletter.sentAt).toLocaleDateString()}
+                    </span>
+                  )}
                 </div>
-                
+              </div>
+              <div className="flex items-center gap-3">
                 {newsletter.status === 'draft' && (
                   <button 
                     onClick={() => handleSendNow(newsletter._id)}
-                    className="flex items-center gap-1 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md border border-blue-200"
+                    className="flex items-center gap-1 px-3 py-1.5 border border-blue-600 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium"
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-3 h-3" />
                     Send Now
                   </button>
                 )}
@@ -189,6 +192,8 @@ export default function Newsletters() {
           ))
         )}
       </div>
+    </>
+    )}
     </div>
   );
 }
