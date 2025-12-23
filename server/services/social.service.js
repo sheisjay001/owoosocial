@@ -142,10 +142,57 @@ exports.publishToWhatsApp = async (post) => {
     }
 };
 
+const TelegramBot = require('node-telegram-bot-api');
+const User = require('../models/User');
+
 exports.publishToTelegram = async (post) => {
-    console.log('[Telegram] Simulating publish to Channel:', post.targetAudience);
-    // Real implementation would use node-telegram-bot-api here
-    return { success: true, id: 'mock_tg_id', platform: 'Telegram' };
+    try {
+        console.log('[Telegram] Publishing post:', post._id);
+
+        // 1. Get the User and Connection
+        const user = await User.findById(post.user);
+        if (!user) throw new Error('User not found for this post');
+
+        const connection = user.connections.find(c => c.platform.toLowerCase() === 'telegram');
+        if (!connection) throw new Error('User does not have a connected Telegram account');
+
+        // 2. Determine Chat ID (Target)
+        // Prefer post-specific target, fallback to connection default
+        const chatId = post.targetAudience || connection.identifier;
+        if (!chatId) throw new Error('No Chat ID (Channel/Group) specified');
+
+        // 3. Determine Bot Token
+        // User MUST provide their own bot token
+        const token = connection.apiKey;
+        if (!token) throw new Error('No Telegram Bot Token provided. Please add your Bot Token in Settings.');
+
+        // 4. Send Message
+        const bot = new TelegramBot(token, { polling: false });
+        
+        let sentMessage;
+        
+        // Handle Image/Media if present (Assuming post.imagePrompt stores URL or we have an imageUrl field - checking Post model, it has imagePrompt but maybe not final URL. 
+        // Usually 'content' is text. If there's media, we might need a different field. 
+        // For now, we'll send text. If there's an image URL in content or separate, we'd handle it.)
+        
+        // Simple text message
+        sentMessage = await bot.sendMessage(chatId, post.content, { parse_mode: 'Markdown' });
+
+        console.log('[Telegram] Published successfully:', sentMessage.message_id);
+        
+        return { 
+            success: true, 
+            id: sentMessage.message_id.toString(), 
+            platform: 'Telegram',
+            url: `https://t.me/${chatId.replace('@', '')}/${sentMessage.message_id}` // Construct link if public channel
+        };
+
+    } catch (error) {
+        console.error('[Telegram] Publish Error:', error.message);
+        // Return object instead of throw to avoid crashing scheduler loop, or let scheduler handle it?
+        // Scheduler catch block handles it.
+        throw error;
+    }
 };
 
 exports.publishToTikTok = async (post) => {

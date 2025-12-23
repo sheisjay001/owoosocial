@@ -569,13 +569,13 @@ export default function Settings() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {modalPlatform === 'WhatsApp' ? 'Verify Token (Optional)' : 
-                   modalPlatform === 'Telegram' ? 'Bot Token (Optional if Global)' : 
+                   modalPlatform === 'Telegram' ? 'Bot Token (Required)' : 
                    'Access Token / API Key'}
                 </label>
                 <input
                   type="password"
                   className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Paste your secret key/token here"
+                  placeholder={modalPlatform === 'Telegram' ? "Paste your Bot Token from BotFather" : "Paste your secret key/token here"}
                   value={formData.apiKey}
                   onChange={e => setFormData({...formData, apiKey: e.target.value})}
                 />
