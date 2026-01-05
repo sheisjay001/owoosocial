@@ -17,6 +17,8 @@ export default function UserProfileSettings() {
   const [verifying, setVerifying] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [polling, setPolling] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -73,9 +75,37 @@ export default function UserProfileSettings() {
       await axios.post('/api/auth/verifyemail', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Verification email sent! Please check your inbox.');
+      setToast({ type: 'info', text: 'Verification email sent. Waiting for confirmation...' });
+      setPolling(true);
+      let attempts = 0;
+      const interval = setInterval(async () => {
+        attempts += 1;
+        try {
+          const token = localStorage.getItem('authToken');
+          const response = await axios.get('/api/auth/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const user = response.data.data;
+          if (user && user.emailVerified) {
+            clearInterval(interval);
+            setPolling(false);
+            setEmailVerified(true);
+            setToast({ type: 'success', text: 'Email verified!' });
+          } else if (attempts >= 12) {
+            clearInterval(interval);
+            setPolling(false);
+            setToast({ type: 'warning', text: 'Still not verified. Open the email link.' });
+          }
+        } catch (e) {
+          if (attempts >= 12) {
+            clearInterval(interval);
+            setPolling(false);
+            setToast({ type: 'warning', text: 'Verification pending. Try again later.' });
+          }
+        }
+      }, 5000);
     } catch (err) {
-      alert('Failed to send verification email');
+      setToast({ type: 'error', text: 'Failed to send verification email' });
     } finally {
       setVerifying(false);
     }
@@ -85,6 +115,11 @@ export default function UserProfileSettings() {
 
   return (
     <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+      {toast && (
+        <div className={`p-3 ${toast.type === 'success' ? 'bg-green-50 text-green-700' : toast.type === 'error' ? 'bg-red-50 text-red-700' : toast.type === 'warning' ? 'bg-amber-50 text-amber-800' : 'bg-blue-50 text-blue-700'}`}>
+          {toast.text}
+        </div>
+      )}
       <div className="p-6 border-b bg-gray-50">
         <h2 className="text-lg font-semibold text-gray-900">User Profile</h2>
         <p className="text-sm text-gray-500">Manage your personal information and contact details.</p>
