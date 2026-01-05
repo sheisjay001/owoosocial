@@ -19,10 +19,35 @@ export default function UserProfileSettings() {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
   const [polling, setPolling] = useState(false);
+  const [suggestedFromEmail, setSuggestedFromEmail] = useState('');
 
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  const fetchDomainsAndSuggest = async (userEmail, currentFromEmail) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await axios.get('/api/domains', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const domains = res.data.domains || res.data.data || [];
+      const verified = domains.find(d => d.status === 'verified');
+      if (verified) {
+        const local = (userEmail || '').split('@')[0] || 'you';
+        const suggestion = `${local}@${verified.domain}`;
+        if (!currentFromEmail || !currentFromEmail.endsWith(`@${verified.domain}`)) {
+          setSuggestedFromEmail(suggestion);
+        } else {
+          setSuggestedFromEmail('');
+        }
+      } else {
+        setSuggestedFromEmail('');
+      }
+    } catch {
+      setSuggestedFromEmail('');
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -41,6 +66,7 @@ export default function UserProfileSettings() {
         fromEmail: user.fromEmail || ''
       });
       setEmailVerified(user.emailVerified || false);
+      fetchDomainsAndSuggest(user.email, user.fromEmail);
     } catch (err) {
       console.error('Failed to fetch profile', err);
       setError('Failed to load profile');
@@ -238,6 +264,19 @@ export default function UserProfileSettings() {
             <p className="mt-1 text-xs text-gray-500">
               To send to other recipients, verify a domain and use a from address from that domain.
             </p>
+            {suggestedFromEmail && (
+              <div className="mt-2 text-xs">
+                <span className="text-gray-600">Suggested:</span>
+                <span className="ml-1 font-mono">{suggestedFromEmail}</span>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, fromEmail: suggestedFromEmail })}
+                  className="ml-2 px-2 py-1 border rounded text-gray-700 hover:bg-gray-100"
+                >
+                  Use Suggestion
+                </button>
+              </div>
+            )}
           </div>
           
           {/* Timezone */}
