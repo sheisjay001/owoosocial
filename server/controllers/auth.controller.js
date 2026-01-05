@@ -213,7 +213,8 @@ exports.updateDetails = async (req, res) => {
       phoneNumber: req.body.phoneNumber,
       timezone: req.body.timezone,
       quietHoursStart: req.body.quietHoursStart,
-      quietHoursEnd: req.body.quietHoursEnd
+      quietHoursEnd: req.body.quietHoursEnd,
+      fromEmail: req.body.fromEmail
     };
 
     let user;
@@ -234,6 +235,7 @@ exports.updateDetails = async (req, res) => {
         if (req.body.timezone) user.timezone = req.body.timezone;
         if (req.body.quietHoursStart) user.quietHoursStart = req.body.quietHoursStart;
         if (req.body.quietHoursEnd) user.quietHoursEnd = req.body.quietHoursEnd;
+        if (req.body.fromEmail) user.fromEmail = req.body.fromEmail;
         
         await user.save();
         
@@ -254,6 +256,7 @@ exports.updateDetails = async (req, res) => {
             if (req.body.timezone) mockUser.timezone = req.body.timezone;
             if (req.body.quietHoursStart) mockUser.quietHoursStart = req.body.quietHoursStart;
             if (req.body.quietHoursEnd) mockUser.quietHoursEnd = req.body.quietHoursEnd;
+            if (req.body.fromEmail) mockUser.fromEmail = req.body.fromEmail;
 
             res.status(200).json({
                 success: true,

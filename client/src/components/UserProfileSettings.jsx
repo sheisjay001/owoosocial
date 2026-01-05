@@ -37,7 +37,8 @@ export default function UserProfileSettings() {
         phoneNumber: user.phoneNumber || '',
         timezone: user.timezone || 'UTC',
         quietHoursStart: user.quietHoursStart || '22:00',
-        quietHoursEnd: user.quietHoursEnd || '07:00'
+        quietHoursEnd: user.quietHoursEnd || '07:00',
+        fromEmail: user.fromEmail || ''
       });
       setEmailVerified(user.emailVerified || false);
     } catch (err) {
@@ -222,6 +223,21 @@ export default function UserProfileSettings() {
               />
             </div>
             <p className="mt-1 text-xs text-gray-500">Include country code (e.g., +1 for USA).</p>
+          </div>
+
+          {/* From Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">From Email (Newsletters)</label>
+            <input
+              type="email"
+              value={formData.fromEmail || ''}
+              onChange={(e) => setFormData({ ...formData, fromEmail: e.target.value })}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              placeholder="you@verified-domain.com"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              To send to other recipients, verify a domain and use a from address from that domain.
+            </p>
           </div>
           
           {/* Timezone */}

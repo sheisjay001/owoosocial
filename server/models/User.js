@@ -54,6 +54,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '07:00'
   },
+  fromEmail: {
+    type: String,
+    trim: true,
+    lowercase: true
+  },
   connections: [
     {
       platform: String, // 'facebook', 'instagram', 'twitter', 'linkedin'

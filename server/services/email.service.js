@@ -44,6 +44,7 @@ const getProvider = () => {
 const emailService = {
   sendEmail: async (to, subject, htmlContent, sender = {}) => {
     const { type, client } = getProvider();
+    const allowedTestEmail = process.env.RESEND_TEST_EMAIL || 'autajoy2003@gmail.com';
 
     if (type === 'mock') {
       console.log(`[Mock Email Service] Sending to: ${to}`);
@@ -81,6 +82,13 @@ const emailService = {
         return info;
 
       } else if (type === 'resend') {
+        const fromDomain = (fromEmail || '').split('@')[1];
+        // Sandbox restriction: if not using verified domain, only allow test email
+        if (!fromDomain || fromEmail === 'onboarding@resend.dev') {
+          if (to !== allowedTestEmail) {
+            throw new Error(`You can only send testing emails to your own email address (${allowedTestEmail}). To send emails to other recipients, please verify a domain at resend.com/domains, and change the from address to an email using this domain.`);
+          }
+        }
         const { data, error } = await client.emails.send({
           from: `${fromName} <${fromEmail}>`,
           to: [to],
@@ -123,6 +131,7 @@ const emailService = {
 
   sendNewsletter: async (newsletter, subscribers, sender = {}) => {
     const { type, client } = getProvider();
+    const allowedTestEmail = process.env.RESEND_TEST_EMAIL || 'autajoy2003@gmail.com';
 
     console.log(`[Newsletter Service] Starting broadcast for "${newsletter.subject}"`);
     console.log(`[Newsletter Service] Sender: ${sender.name} (${sender.email})`);
@@ -163,6 +172,12 @@ const emailService = {
                     replyTo: replyTo
                 });
             } else if (type === 'resend') {
+                const fromDomain = (fromEmail || '').split('@')[1];
+                if (!fromDomain || fromEmail === 'onboarding@resend.dev') {
+                    if (subscriber !== allowedTestEmail) {
+                        throw new Error(`You can only send testing emails to your own email address (${allowedTestEmail}). To send emails to other recipients, please verify a domain at resend.com/domains, and change the from address to an email using this domain.`);
+                    }
+                }
                 const { error } = await client.emails.send({
                     from: `${fromName} <${fromEmail}>`,
                     to: [subscriber],

@@ -100,6 +100,15 @@ export default function EmailDomainSettings() {
         <h2 className="text-lg font-semibold text-gray-900">Email Domains</h2>
         <p className="text-sm text-gray-500">Verify your domains to send branded emails and newsletters.</p>
       </div>
+      
+      {/* Info banner when no verified domains */}
+      <div className="p-4">
+        {domains.filter(d => d.status === 'verified').length === 0 && (
+          <div className="p-4 bg-blue-50 text-blue-700 rounded-md text-sm">
+            You can only send testing emails to your own email address (autajoy2003@gmail.com). To send emails to other recipients, please verify a domain at resend.com/domains, and change the from address to an email using this domain.
+          </div>
+        )}
+      </div>
 
       <div className="p-6 border-b">
         <h3 className="text-sm font-medium text-gray-700 mb-3">Add New Domain</h3>
