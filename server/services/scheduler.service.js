@@ -91,7 +91,7 @@ const initScheduler = () => {
                     }
 
                     // Get WhatsApp Credentials
-                    const waConnection = broadcast.user.connections.find(c => c.platform === 'WhatsApp');
+                    const waConnection = broadcast.user.connections.find(c => (c.platform || '').toLowerCase() === 'whatsapp');
                     
                     // Fallback to apiKey/identifier if accessToken/platformId are missing
                     const accessToken = waConnection?.accessToken || waConnection?.apiKey;
@@ -270,6 +270,36 @@ const initScheduler = () => {
                 continue;
             }
 
+            if (newsletter.user) {
+                const tz = newsletter.user.timezone || 'UTC';
+                const start = newsletter.user.quietHoursStart || '22:00';
+                const end = newsletter.user.quietHoursEnd || '07:00';
+                const loc = new Date().toLocaleString('en-GB', { timeZone: tz, hour12: false });
+                const hm = loc.split(' ')[1] || new Date().toISOString().slice(11,16);
+                const [h,m] = hm.split(':').map(Number);
+                const [sh,sm] = start.split(':').map(Number);
+                const [eh,em] = end.split(':').map(Number);
+                const curMin = h*60+m;
+                const sMin = sh*60+sm;
+                const eMin = eh*60+em;
+                const inQuiet = sMin <= eMin ? (curMin >= sMin && curMin < eMin) : (curMin >= sMin || curMin < eMin);
+                if (inQuiet) {
+                    const next = new Date();
+                    const locDate = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
+                    locDate.setHours(eh, em, 0, 0);
+                    if (sMin > eMin && curMin >= sMin) {
+                        locDate.setDate(locDate.getDate() + 1);
+                    }
+                    const utcOffsetMs = next.getTime() - new Date(next.toLocaleString('en-US', { timeZone: 'UTC' })).getTime();
+                    const tzOffsetMs = next.getTime() - new Date(next.toLocaleString('en-US', { timeZone: tz })).getTime();
+                    const adjustMs = tzOffsetMs - utcOffsetMs;
+                    const targetUtc = new Date(locDate.getTime() + adjustMs);
+                    newsletter.scheduledTime = targetUtc;
+                    newsletter.status = 'scheduled';
+                    if (newsletter.save) await newsletter.save();
+                    continue;
+                }
+            }
             // Send using email service (passing user as sender)
             await emailService.sendNewsletter(newsletter, subscribers, newsletter.user);
             

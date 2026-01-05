@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --primary: #2563EB;
+  --success: #16A34A;
+  --warning: #D97706;
+  --error: #DC2626;
+}
+
+.dark {
+  --bg: #0B1220;
+  --surface: #111827;
+  --text: #E5E7EB;
+  --primary: #7DD3FC;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --error: #EF4444;
+}

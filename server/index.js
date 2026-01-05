@@ -1,5 +1,10 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const expressRaw = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
@@ -26,18 +31,46 @@ const whatsappRoutes = require('./routes/whatsapp.routes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Update CORS options
-app.use(cors({
-  origin: '*', // Allow all origins (for now) to fix 405/CORS issues
+app.use(helmet());
+
+const allowedOrigin = process.env.CORS_ORIGIN || '*';
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigin === '*' || origin === allowedOrigin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
-}));
+};
+app.use(cors(corsOptions));
 
 // Handle preflight requests explicitly
 // app.options('*', cors()); // Removed to avoid routing error. Global cors() middleware handles this.
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => {
+    try {
+      const auth = req.headers['authorization'] || '';
+      const [, token] = auth.split(' ');
+      if (token) {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_123');
+        return decoded.id || req.ip;
+      }
+    } catch (e) {}
+    return req.ip;
+  }
+});
+app.use(limiter);
 
 // DEBUG: Log all incoming requests to Express
 app.use((req, res, next) => {
@@ -94,6 +127,28 @@ const routes = [
 routes.forEach(({ path, route }) => {
   app.use(`/api${path}`, route);
   app.use(path, route); // Fallback if /api is stripped
+});
+
+// Generic Webhook Endpoint with HMAC verification
+function verifySignature(req, res, next) {
+  const secret = process.env.WEBHOOK_SECRET;
+  if (!secret) return res.status(400).json({ success: false, error: 'Webhook secret not configured' });
+  const sig = req.headers['x-signature'] || req.headers['x-hub-signature-256'];
+  if (!sig) return res.status(401).json({ success: false, error: 'Missing signature' });
+  // Support "sha256=..." format or raw hex
+  const provided = sig.includes('=') ? sig.split('=')[1] : sig;
+  const hmac = crypto.createHmac('sha256', secret);
+  hmac.update(req.body);
+  const expected = hmac.digest('hex');
+  if (provided !== expected) {
+    return res.status(401).json({ success: false, error: 'Invalid signature' });
+  }
+  next();
+}
+
+app.post('/api/webhooks/:provider', expressRaw.raw({ type: '*/*' }), verifySignature, (req, res) => {
+  console.log(`[Webhook] Received from ${req.params.provider}`);
+  res.status(200).json({ success: true });
 });
 
 // DEBUG: Catch-all 404 handler to inspect the path

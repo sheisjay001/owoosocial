@@ -210,7 +210,10 @@ exports.updateDetails = async (req, res) => {
     const fieldsToUpdate = {
       name: req.body.name,
       email: req.body.email,
-      phoneNumber: req.body.phoneNumber
+      phoneNumber: req.body.phoneNumber,
+      timezone: req.body.timezone,
+      quietHoursStart: req.body.quietHoursStart,
+      quietHoursEnd: req.body.quietHoursEnd
     };
 
     let user;
@@ -228,6 +231,9 @@ exports.updateDetails = async (req, res) => {
              user.emailVerified = false; // Reset verification on email change
         }
         if (req.body.phoneNumber) user.phoneNumber = req.body.phoneNumber;
+        if (req.body.timezone) user.timezone = req.body.timezone;
+        if (req.body.quietHoursStart) user.quietHoursStart = req.body.quietHoursStart;
+        if (req.body.quietHoursEnd) user.quietHoursEnd = req.body.quietHoursEnd;
         
         await user.save();
         
@@ -245,6 +251,9 @@ exports.updateDetails = async (req, res) => {
                 mockUser.emailVerified = false;
             }
             if (req.body.phoneNumber) mockUser.phoneNumber = req.body.phoneNumber;
+            if (req.body.timezone) mockUser.timezone = req.body.timezone;
+            if (req.body.quietHoursStart) mockUser.quietHoursStart = req.body.quietHoursStart;
+            if (req.body.quietHoursEnd) mockUser.quietHoursEnd = req.body.quietHoursEnd;
 
             res.status(200).json({
                 success: true,
@@ -492,4 +501,3 @@ exports.removeConnection = async (req, res) => {
       res.status(500).json({ success: false, error: error.message });
     }
   };
-

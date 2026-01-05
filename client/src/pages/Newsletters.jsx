@@ -14,13 +14,61 @@ export default function Newsletters() {
     scheduleTime: '',
     newRecipients: ''
   });
+  const [userSettings, setUserSettings] = useState({
+    timezone: 'UTC',
+    quietHoursStart: '22:00',
+    quietHoursEnd: '07:00'
+  });
+  const [schedulePreview, setSchedulePreview] = useState(null);
   const [subscriberCount, setSubscriberCount] = useState(0);
 
   useEffect(() => {
     fetchNewsletters();
     fetchSubscriberCount();
+    fetchUserSettings();
   }, []);
 
+  const fetchUserSettings = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const user = response.data.data || {};
+      setUserSettings({
+        timezone: user.timezone || 'UTC',
+        quietHoursStart: user.quietHoursStart || '22:00',
+        quietHoursEnd: user.quietHoursEnd || '07:00'
+      });
+    } catch (err) {
+      console.error('Failed to fetch user settings', err);
+    }
+  };
+
+  useEffect(() => {
+    if (!formData.scheduleTime) {
+      setSchedulePreview(null);
+      return;
+    }
+    try {
+      const dt = new Date(formData.scheduleTime);
+      const tz = userSettings.timezone || 'UTC';
+      const localStr = dt.toLocaleString('en-GB', { timeZone: tz, hour12: false });
+      const hm = localStr.split(' ')[1] || dt.toISOString().slice(11,16);
+      const [h,m] = hm.split(':').map(Number);
+      const [sh,sm] = (userSettings.quietHoursStart || '22:00').split(':').map(Number);
+      const [eh,em] = (userSettings.quietHoursEnd || '07:00').split(':').map(Number);
+      const curMin = h*60+m, sMin = sh*60+sm, eMin = eh*60+em;
+      const inQuiet = sMin <= eMin ? (curMin >= sMin && curMin < eMin) : (curMin >= sMin || curMin < eMin);
+      setSchedulePreview({
+        localTime: localStr,
+        timezone: tz,
+        inQuiet
+      });
+    } catch (e) {
+      setSchedulePreview(null);
+    }
+  }, [formData.scheduleTime, userSettings]);
   const fetchSubscriberCount = async () => {
     try {
       const token = localStorage.getItem('authToken');
@@ -144,7 +192,7 @@ export default function Newsletters() {
       ) : (
         <>
           {showForm && (
-        <div className="bg-white p-6 rounded-lg border shadow-sm mb-6">
+        <div className="bg-[var(--surface)] p-6 rounded-lg border shadow-sm mb-6 text-[color:var(--text)]">
           <h2 className="text-lg font-semibold mb-4">New Campaign</h2>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
@@ -216,6 +264,22 @@ export default function Newsletters() {
                 value={formData.scheduleTime}
                 onChange={(e) => setFormData({...formData, scheduleTime: e.target.value})}
               />
+              {formData.scheduleTime && (
+                <div className="mt-2 text-sm border border-gray-200 rounded-md p-3 bg-white">
+                  {schedulePreview ? (
+                    <>
+                      <div>Local: {schedulePreview.localTime} ({schedulePreview.timezone})</div>
+                      {schedulePreview.inQuiet ? (
+                        <div className="text-amber-600">Falls in quiet hours. Will auto-reschedule.</div>
+                      ) : (
+                        <div className="text-green-600">Within allowed hours.</div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-gray-500">Pick a date/time to see preview</div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex justify-end gap-3 mt-4">
               <button 
@@ -227,7 +291,7 @@ export default function Newsletters() {
               </button>
               <button 
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-[color:var(--primary)] text-white rounded-md hover:opacity-90"
               >
                 Create & Schedule
               </button>

@@ -42,6 +42,18 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  timezone: {
+    type: String,
+    default: 'UTC'
+  },
+  quietHoursStart: {
+    type: String,
+    default: '22:00'
+  },
+  quietHoursEnd: {
+    type: String,
+    default: '07:00'
+  },
   connections: [
     {
       platform: String, // 'facebook', 'instagram', 'twitter', 'linkedin'

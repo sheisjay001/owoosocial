@@ -6,7 +6,10 @@ export default function UserProfileSettings() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    timezone: 'UTC',
+    quietHoursStart: '22:00',
+    quietHoursEnd: '07:00'
   });
   const [emailVerified, setEmailVerified] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -29,7 +32,10 @@ export default function UserProfileSettings() {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        phoneNumber: user.phoneNumber || ''
+        phoneNumber: user.phoneNumber || '',
+        timezone: user.timezone || 'UTC',
+        quietHoursStart: user.quietHoursStart || '22:00',
+        quietHoursEnd: user.quietHoursEnd || '07:00'
       });
       setEmailVerified(user.emailVerified || false);
     } catch (err) {
@@ -171,6 +177,46 @@ export default function UserProfileSettings() {
               />
             </div>
             <p className="mt-1 text-xs text-gray-500">Include country code (e.g., +1 for USA).</p>
+          </div>
+          
+          {/* Timezone */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+            <select
+              value={formData.timezone}
+              onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              <option value="UTC">UTC</option>
+              <option value="Africa/Lagos">Africa/Lagos</option>
+              <option value="Europe/London">Europe/London</option>
+              <option value="America/New_York">America/New_York</option>
+              <option value="America/Los_Angeles">America/Los_Angeles</option>
+              <option value="Asia/Dubai">Asia/Dubai</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">Used to schedule newsletters and avoid quiet hours.</p>
+          </div>
+
+          {/* Quiet Hours */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Quiet Hours Start</label>
+              <input
+                type="time"
+                value={formData.quietHoursStart}
+                onChange={(e) => setFormData({ ...formData, quietHoursStart: e.target.value })}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Quiet Hours End</label>
+              <input
+                type="time"
+                value={formData.quietHoursEnd}
+                onChange={(e) => setFormData({ ...formData, quietHoursEnd: e.target.value })}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
           </div>
 
           <div className="flex justify-end">

@@ -31,6 +31,12 @@ export default function Settings() {
 
   useEffect(() => {
     fetchConnections();
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (saved === 'light') {
+      document.documentElement.classList.remove('dark');
+    }
   }, []);
 
   const fetchConnections = async () => {
@@ -98,8 +104,22 @@ export default function Settings() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings & Integrations</h1>
-        <p className="text-gray-500 mt-2">Manage your connected social accounts and API keys.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Settings & Integrations</h1>
+            <p className="text-gray-500 mt-2">Manage your connected social accounts and API keys.</p>
+          </div>
+          <button
+            onClick={() => {
+              const root = document.documentElement;
+              const isDark = root.classList.toggle('dark');
+              localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            }}
+            className="px-3 py-2 border rounded-md text-sm font-medium"
+          >
+            Toggle Theme
+          </button>
+        </div>
       </div>
 
       <UserProfileSettings />
