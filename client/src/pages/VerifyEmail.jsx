@@ -29,7 +29,7 @@ export default function VerifyEmail() {
         
         // Redirect after 3 seconds
         setTimeout(() => {
-            navigate('/dashboard');
+            navigate('/');
         }, 3000);
 
       } catch (error) {

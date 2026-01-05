@@ -142,14 +142,24 @@ export default function UserProfileSettings() {
                     <CheckCircle className="w-4 h-4 mr-1" /> Verified
                   </span>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={handleVerifyEmail}
-                    disabled={verifying}
-                    className="text-blue-600 text-xs font-medium hover:text-blue-800 flex items-center"
-                  >
-                    {verifying ? 'Sending...' : 'Verify Now'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleVerifyEmail}
+                      disabled={verifying}
+                      className="text-blue-600 text-xs font-medium hover:text-blue-800 flex items-center"
+                    >
+                      {verifying ? 'Sending...' : 'Verify Now'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={fetchProfile}
+                      className="text-gray-500 text-xs font-medium hover:text-gray-700"
+                      title="Refresh status"
+                    >
+                      Refresh
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

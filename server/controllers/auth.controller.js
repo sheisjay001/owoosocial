@@ -302,7 +302,8 @@ exports.sendVerificationEmail = async (req, res) => {
 
         // Build secure verification link
         // Priority: FRONTEND_URL > VERCEL_URL (auto) > production fallback
-        const frontendUrl = process.env.FRONTEND_URL
+        const frontendUrl = process.env.CLIENT_URL
+          || process.env.FRONTEND_URL
           || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
           || 'https://owoosocial-rocf.vercel.app';
         const link = `${frontendUrl}/verify-email/${verificationToken}`;
